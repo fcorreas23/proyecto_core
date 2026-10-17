@@ -1,2 +1,15 @@
-.env
+# Entorno virtual
 venv/
+.venv/
+env/
+
+# Variables de entorno
+.env
+
+# Cachés y compilados de Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Logs
+*.log
