@@ -1,6 +1,8 @@
 import os
 import requests
 import time
+import json
+import re
 from dotenv import load_dotenv
 
 modelos = [
@@ -31,13 +33,24 @@ load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Función para armar la petición a la API de Gemini
-def armar_peticion(pregunta, modelo):
-	if not pregunta:
-		raise ValueError("La pregunta no puede estar vacía")
-	api_key = API_KEY
-	url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={api_key}"
-	body = {"contents": [{"parts": [{"text": pregunta}]}]}
-	return url, body
+def armar_peticion(pregunta_usuario, modelo, system_instruction=None, response_schema=None):
+    if not pregunta_usuario:
+        raise ValueError("La pregunta no puede estar vacía")
+    api_key = API_KEY
+    if not api_key:
+        raise ValueError("La API key no está configurada")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={api_key}"
+    body = {"contents": [{"parts": [{"text": pregunta_usuario.strip()}]}]}
+    # Si se proporciona una instrucción del sistema, se agrega al cuerpo de la petición
+    if system_instruction:
+        body["systemInstruction"] = {"parts": [{"text": system_instruction.strip()}]}
+    # el modelo responde un texto JSON que cumple esa estructura
+    if response_schema:
+        body["generationConfig"] = {
+            "responseMimeType": "application/json",
+            "responseSchema": response_schema
+        }
+    return url, body
 
 # Función para enviar la petición a la API de Gemini
 def enviar_peticion(url, body):
@@ -82,9 +95,9 @@ def obtener_precios(modelo):
     raise ValueError(f"El modelo {modelo} no está en la lista de modelos")
 
 # Función que consulta un modelo y devuelve el texto, el tiempo de respuesta y el costo
-def consultar_modelo(pregunta, modelo):
+def consultar_modelo(pregunta, modelo, system_instruction=None, response_schema=None):
     precio_entrada, precio_salida = obtener_precios(modelo)
-    url, body = armar_peticion(pregunta, modelo)
+    url, body = armar_peticion(pregunta, modelo, system_instruction, response_schema)
 
     inicio = time.perf_counter()
     datos = enviar_peticion(url, body)
@@ -94,10 +107,33 @@ def consultar_modelo(pregunta, modelo):
     costo = calcular_costo(datos, precio_entrada, precio_salida)
     return texto, segundos, costo
 
+# Función para convertir el texto del modelo en un diccionario, limpiando los bloques ```json si vienen
+def parsear_respuesta_json(texto):
+    limpio = re.sub(r"^```(?:json)?\s*|\s*```$", "", texto.strip())
+    try:
+        datos = json.loads(limpio)
+    except json.JSONDecodeError:
+        raise ValueError("El texto proporcionado no es un JSON válido.")
+    if not isinstance(datos, dict):
+        raise ValueError("La respuesta no tiene la estructura esperada.")
+    return datos
+
 # Solo se ejecuta al correr este archivo directamente, no al importarlo
 if __name__ == "__main__":
     try:
         # Aquí puedes cambiar la pregunta o el modelo según tus necesidades
+        """
+        system_instruction = "Eres un asistente útil que responde preguntas de geografía."
+        response_schema = {
+                    "type": "object",
+                    "properties": {
+                        "respuesta": {"type": "string"},
+                        "confianza": {"type": "number"}
+                    },
+                    "required": ["respuesta", "confianza"]
+                }
+        """
+        
         texto, segundos, costo = consultar_modelo("¿Cuál es la capital de Francia?", "gemini-3.1-flash-lite")
         print(texto)
         print(f"Tiempo de respuesta: {segundos:.2f} segundos")

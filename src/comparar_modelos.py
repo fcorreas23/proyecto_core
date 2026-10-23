@@ -5,7 +5,7 @@ from consumir_api import consultar_modelo, modelos
 PROMPT = "Eres un agronomo que trabaja con cerezos en Chile, un agricultor de la región de O'Higgins te pide recomendaciones sobre cual variedad de cerezo plantar en su huerto. Considera el clima, el suelo y la resistencia a enfermedades. Utiliza tu conocimiento experto para dar la mejor recomendación corta y precisa. "
 RUN = 4
 PAUSA = 5  # segundos entre peticiones para no superar la cuota del plan gratuito
-ARCHIVO_RESPUESTAS = "respuestas_comparacion.md"
+ARCHIVO_RESPUESTAS = "docs/respuestas_comparacion.md"
 
 # Función que hace la misma pregunta RUN veces a cada modelo y guarda cada resultado
 def comparar_modelos():

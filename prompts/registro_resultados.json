@@ -1,0 +1,141 @@
+{
+  "modelo": "gemini-3.5-flash-lite",
+  "fecha": "2026-10-23",
+  "prompts": {
+    "recomendar_variedad": {
+      "usa_response_schema": true,
+      "exitos": 3,
+      "fallos": 0,
+      "intentos": 3,
+      "detalle_intentos": [
+        {
+          "intento": 1,
+          "valido": true,
+          "respuesta": {
+            "variedad": "Lapins",
+            "portainjerto": "Colt",
+            "motivos": [
+              "Es una variedad autofértil, ideal para zonas con riesgo de lluvias primaverales.",
+              "Tiene buena tolerancia al agrietamiento (cracking) por precipitaciones.",
+              "Se adapta muy bien a los suelos franco-arcillosos de la región de O'Higgins."
+            ],
+            "requiere_polinizante": false
+          }
+        },
+        {
+          "intento": 2,
+          "valido": true,
+          "respuesta": {
+            "variedad": "Lapins",
+            "portainjerto": "Colt",
+            "motivos": [
+              "Tolerancia moderada a partiduras por lluvia en cosecha",
+              "Alta fertilidad y buena productividad",
+              "Excelente adaptación a suelos franco-arcillosos de la zona central"
+            ],
+            "requiere_polinizante": false
+          }
+        },
+        {
+          "intento": 3,
+          "valido": true,
+          "respuesta": {
+            "variedad": "Lapins",
+            "portainjerto": "Colt",
+            "motivos": [
+              "Es una variedad autofértil que tolera bien las lluvias ocasionales de noviembre en la zona central.",
+              "Presenta un calibre atractivo y excelente firmeza comercial.",
+              "El portainjerto Colt se adapta muy bien a suelos franco-arcillosos con buena retención de humedad."
+            ],
+            "requiere_polinizante": false
+          }
+        }
+      ]
+    },
+    "diagnosticar_problema": {
+      "usa_response_schema": true,
+      "exitos": 3,
+      "fallos": 0,
+      "intentos": 3,
+      "detalle_intentos": [
+        {
+          "intento": 1,
+          "valido": true,
+          "respuesta": {
+            "problema": "Chancro bacteriano",
+            "tipo": "enfermedad",
+            "gravedad": "alta",
+            "acciones": [
+              "Podar y destruir las ramas afectadas durante la estación seca.",
+              "Aplicar tratamientos fungicidas a base de cobre después de la caída de hojas.",
+              "Desinfectar las herramientas de poda entre árbol y árbol."
+            ]
+          }
+        },
+        {
+          "intento": 2,
+          "valido": true,
+          "respuesta": {
+            "problema": "Cancro bacteriano",
+            "tipo": "enfermedad",
+            "gravedad": "alta",
+            "acciones": [
+              "Podar las ramas afectadas durante el periodo seco, cortando al menos 20 cm por debajo del tejido sintomático.",
+              "Desinfectar las herramientas de poda con alcohol o lejía entre cada corte para evitar la propagación.",
+              "Aplicar un tratamiento a base de cobre en otoño y después de la caída de las hojas para proteger las heridas."
+            ]
+          }
+        },
+        {
+          "intento": 3,
+          "valido": true,
+          "respuesta": {
+            "problema": "Chancro bacteriano",
+            "tipo": "enfermedad",
+            "gravedad": "alta",
+            "acciones": [
+              "Podar las ramas afectadas en días secos desinfectando las herramientas.",
+              "Aplicar tratamientos cúpricos después de la caída de hojas y en prefloración.",
+              "Mejorar el drenaje del suelo para evitar excesos de humedad."
+            ]
+          }
+        }
+      ]
+    },
+    "resumir_consulta": {
+      "usa_response_schema": false,
+      "exitos": 3,
+      "fallos": 0,
+      "intentos": 3,
+      "detalle_intentos": [
+        {
+          "intento": 1,
+          "valido": true,
+          "respuesta": {
+            "resumen": "El agricultor se preocupa por el riesgo de partidura de fruta en su huerto de cerezos a una semana de la cosecha debido a un pronóstico de lluvia y busca soluciones urgentes.",
+            "cultivo": "cerezos Lapins",
+            "urgente": true
+          }
+        },
+        {
+          "intento": 2,
+          "valido": true,
+          "respuesta": {
+            "resumen": "El agricultor se preocupa por el agrietamiento de sus cerezos Lapins debido a la lluvia pronosticada para el jueves, a una semana de la cosecha.",
+            "cultivo": "cerezos Lapins",
+            "urgente": true
+          }
+        },
+        {
+          "intento": 3,
+          "valido": true,
+          "respuesta": {
+            "resumen": "El agricultor está preocupado por el pronóstico de lluvias a una semana de la cosecha en su huerto de cerezos sin protección, temiendo que la fruta se parta. Solicita medidas de acción urgentes.",
+            "cultivo": "Cerezo",
+            "urgente": true
+          }
+        }
+      ]
+    }
+  }
+}
