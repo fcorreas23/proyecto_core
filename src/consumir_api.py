@@ -1,6 +1,31 @@
 import os
 import requests
+import time
 from dotenv import load_dotenv
+
+modelos = [
+    {
+        "nombre": "gemini-3.8-flash",
+        "precio_entrada": 0.00000075,
+        "precio_salida": 0.00000375
+    },
+    {
+        "nombre": "gemini-3.6-flash",
+        "precio_entrada": 0.00000075,
+        "precio_salida": 0.00000375
+    },
+    {
+        "nombre": "gemini-3.5-flash-lite",
+        "precio_entrada": 0.0000003,
+        "precio_salida": 0.0000025
+    },
+    {
+        "nombre": "gemini-3.1-flash-lite",
+        "precio_entrada": 0.00000025,
+        "precio_salida": 0.0000015
+    }
+]
+
 
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
@@ -17,9 +42,13 @@ def armar_peticion(pregunta, modelo):
 # Función para enviar la petición a la API de Gemini
 def enviar_peticion(url, body):
     try:
-        respuesta = requests.post(url, json=body)
+        respuesta = requests.post(url, json=body, timeout=30)
+        if respuesta.status_code != 200:
+            raise RuntimeError(f"Error en la respuesta del servicio: {respuesta.status_code}")
     except requests.exceptions.ConnectionError:
         raise RuntimeError("No se pudo conectar con el servicio. Intenta de nuevo en unos segundos.")
+    except requests.exceptions.Timeout:
+        raise RuntimeError("El servicio tardó demasiado en responder. Intenta de nuevo en unos segundos.")
     
     try:
         return respuesta.json()
@@ -33,15 +62,45 @@ def extraer_texto(datos):
     except (KeyError, IndexError):
         raise RuntimeError("La respuesta no trae el texto generado en el lugar esperado.")
 
-# Función para obtener un dato de prueba usando la API de Gemini
-def obtener_dato_de_prueba(pregunta, modelo ="gemini-flash-latest"):
-    url, body = armar_peticion(pregunta, modelo)
-    datos = enviar_peticion(url, body)
-    return extraer_texto(datos)
+# Función para calcular el costo estimado a partir del uso de tokens de la respuesta
+def calcular_costo(datos, precio_entrada, precio_salida):
+    try:
+        uso = datos["usageMetadata"]
+        tokens_entrada = uso["promptTokenCount"]
+        tokens_salida = uso["candidatesTokenCount"]
+        tokens_razonamiento = uso.get("thoughtsTokenCount", 0)  # los modelos sin razonamiento no envían este campo
+    except KeyError:
+        raise RuntimeError("La respuesta no trae la información de uso de tokens.")
+    costo_total = (tokens_entrada * precio_entrada) + ( (tokens_salida + tokens_razonamiento) * precio_salida )
+    return costo_total
 
-try:
-    # Intentamos obtener un dato de prueba usando la API de Gemini
-    # Aquí puedes cambiar la pregunta o el modelo según tus necesidades
-    print(obtener_dato_de_prueba("¿Cuál es la capital de Francia?")) # Prueba con la pregunta sobre la capital de Francia
-except (ValueError, RuntimeError) as error:
-    print("No se pudo completar la operación:", error)
+# Función para buscar los precios de un modelo en la lista de modelos
+def obtener_precios(modelo):
+    for m in modelos:
+        if m["nombre"] == modelo:
+            return m["precio_entrada"], m["precio_salida"]
+    raise ValueError(f"El modelo {modelo} no está en la lista de modelos")
+
+# Función que consulta un modelo y devuelve el texto, el tiempo de respuesta y el costo
+def consultar_modelo(pregunta, modelo):
+    precio_entrada, precio_salida = obtener_precios(modelo)
+    url, body = armar_peticion(pregunta, modelo)
+
+    inicio = time.perf_counter()
+    datos = enviar_peticion(url, body)
+    segundos = time.perf_counter() - inicio
+
+    texto = extraer_texto(datos)
+    costo = calcular_costo(datos, precio_entrada, precio_salida)
+    return texto, segundos, costo
+
+# Solo se ejecuta al correr este archivo directamente, no al importarlo
+if __name__ == "__main__":
+    try:
+        # Aquí puedes cambiar la pregunta o el modelo según tus necesidades
+        texto, segundos, costo = consultar_modelo("¿Cuál es la capital de Francia?", "gemini-3.1-flash-lite")
+        print(texto)
+        print(f"Tiempo de respuesta: {segundos:.2f} segundos")
+        print(f"Costo de la petición: ${costo:.6f} USD")
+    except (ValueError, RuntimeError) as error:
+        print("No se pudo completar la operación:", error)
