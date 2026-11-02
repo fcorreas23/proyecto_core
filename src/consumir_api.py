@@ -56,16 +56,27 @@ def armar_peticion(pregunta_usuario, modelo, system_instruction=None, response_s
 def enviar_peticion(url, body):
     try:
         respuesta = requests.post(url, json=body, timeout=30)
-        if respuesta.status_code != 200:
-            raise RuntimeError(f"Error en la respuesta del servicio: {respuesta.status_code}")
+        
     except requests.exceptions.ConnectionError:
         raise RuntimeError("No se pudo conectar con el servicio. Intenta de nuevo en unos segundos.")
     except requests.exceptions.Timeout:
-        raise RuntimeError("El servicio tardó demasiado en responder. Intenta de nuevo en unos segundos.")
+        raise TimeoutError("El servicio tardó demasiado en responder. Intenta de nuevo en unos segundos.")
+    
+    if respuesta.status_code in(401, 403):
+        raise ValueError("Credencial inválida o sin permiso. Revisa tu GEMINI_API_KEY")
+    if respuesta.status_code >= 500:
+        raise TimeoutError("El proveedor no pudo procesar la petición. Hay que esperar y reintentar")
+    if respuesta.status_code == 429:
+        segundos = respuesta.headers.get("Retry-After")
+        mensaje = f"Límite excedido. Reintentar en {segundos}s." if segundos else "Límite excedido."
+        raise TimeoutError(mensaje)
+        
+    if respuesta.status_code != 200:
+        raise RuntimeError(f"Error en la petición. Status Code: {respuesta.status_code}")
     
     try:
         return respuesta.json()
-    except requests.exceptions.JSONDecodeError:
+    except ValueError:
         raise RuntimeError("La respuesta del servicio no llegó en el formato esperado.")
 
 # Función para extraer el texto de la respuesta de la API de Gemini
@@ -86,6 +97,14 @@ def calcular_costo(datos, precio_entrada, precio_salida):
         raise RuntimeError("La respuesta no trae la información de uso de tokens.")
     costo_total = (tokens_entrada * precio_entrada) + ( (tokens_salida + tokens_razonamiento) * precio_salida )
     return costo_total
+
+# Función para calcular el costo de una respuesta con los precios del modelo y mostrarlo
+def registrar_costo(datos, modelo):
+    precio_entrada, precio_salida = obtener_precios(modelo)
+    costo_estimado = calcular_costo(datos, precio_entrada, precio_salida)
+    total_tokens = datos["usageMetadata"].get("totalTokenCount", 0)
+    print(f"Operación: {total_tokens} tokens, costo estimado: ${costo_estimado:.6f}")
+    return costo_estimado
 
 # Función para buscar los precios de un modelo en la lista de modelos
 def obtener_precios(modelo):
@@ -131,12 +150,20 @@ if __name__ == "__main__":
                         "confianza": {"type": "number"}
                     },
                     "required": ["respuesta", "confianza"]
-                }
+                }       
+        while True:
+            pregunta = input("Ingresa tu pregunta (o 'salir' para terminar): ")
+            if pregunta.lower() == "salir":
+                break
+            texto, segundos, costo = consultar_modelo(pregunta, "gemini-3.1-flash-lite")
+            print(texto)
+            print(f"Tiempo de respuesta: {segundos:.2f} segundos")
+            print(f"Costo de la petición: ${costo:.6f} USD") 
         """
         
         texto, segundos, costo = consultar_modelo("¿Cuál es la capital de Francia?", "gemini-3.1-flash-lite")
         print(texto)
         print(f"Tiempo de respuesta: {segundos:.2f} segundos")
         print(f"Costo de la petición: ${costo:.6f} USD")
-    except (ValueError, RuntimeError) as error:
+    except (ValueError, RuntimeError, TimeoutError) as error:
         print("No se pudo completar la operación:", error)

@@ -22,7 +22,7 @@ def comparar_modelos():
                     "tiempo": segundos,
                     "costo": costo
                 })
-            except (ValueError, RuntimeError) as error:
+            except (ValueError, RuntimeError, TimeoutError) as error:
                 resultados.append({
                     "modelo": nombre,
                     "intento": i + 1,

@@ -51,7 +51,7 @@ def probar_banco():
                 validar_estructura(datos, prompt)
                 exitos += 1
                 detalle.append({"intento": intento + 1, "valido": True, "respuesta": datos})
-            except (ValueError, RuntimeError) as error:
+            except (ValueError, RuntimeError, TimeoutError) as error:
                 print(f"  intento {intento + 1} falló: {error}")
                 # Se guarda el JSON si se pudo leer, si no el texto crudo, o None si el servicio no respondió
                 detalle.append({
