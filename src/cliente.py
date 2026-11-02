@@ -3,7 +3,8 @@ import random
 from typing import Callable, Any
 from consumir_api import armar_peticion, extraer_texto, enviar_peticion, registrar_costo
 
-MODELO = "gemini-3.5-flash-lite"
+MODELO = "gemini-3.6-flash"
+PETICIONES = 10 
 costo_total_sesion = 0.0
 
 # Función que reintenta una llamada con espera exponencial cuando el servicio no responde
@@ -16,12 +17,13 @@ def con_reintento(
     for intento in range(1, intentos + 1):
         try:
             return funcion()
-        except TimeoutError:
+        except TimeoutError as error:
+            print(f"Intento {intento} de {intentos} falló: {error}")
             if intento == intentos:
                 raise
             espera = min(espera_base * (2 ** (intento - 1)), espera_maxima)
             espera_con_jitter = espera + random.uniform(0, espera * 0.1)
-            print(f"Intento {intento} de {intentos} falló. Reintentando en {espera_con_jitter:.1f}s...")
+            print(f"Reintentando en {espera_con_jitter:.1f}s...")
             time.sleep(espera_con_jitter)
 
 # Función que consulta el modelo con reintentos y acumula el costo de la sesión
@@ -36,10 +38,13 @@ def consultar_modelo(pregunta, modelo=MODELO, system_instruction=None):
     return extraer_texto(respuesta)
 
 
+# Ensayo: peticiones seguidas, sin pausa, para provocar un rate limit real
 if __name__ == "__main__":
-    try:
-        resultado = consultar_modelo("¿Cuál es la capital de Chile?")
-        print(resultado)
-        print(f"Costo total de la sesión: ${costo_total_sesion:.6f}")
-    except (ValueError, RuntimeError) as error:
-        print("No se pudo completar la operación:", error)
+    for i in range(PETICIONES):
+        try:
+            respuesta = consultar_modelo(f"Pregunta de prueba número {i}")
+            print(f"Respuesta {i}: {respuesta[:40]}...")
+        except RuntimeError as error:
+            print(f"Respuesta {i} falló definitivamente: {error}")
+
+    print(f"Costo total del ensayo: ${costo_total_sesion:.6f}")
