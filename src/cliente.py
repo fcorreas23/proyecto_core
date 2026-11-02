@@ -3,7 +3,7 @@ import random
 from typing import Callable, Any
 from consumir_api import armar_peticion, extraer_texto, enviar_peticion, registrar_costo
 
-MODELO = "gemini-3.6-flash"
+MODELO = "gemini-3.5-flash-lite"
 PETICIONES = 10 
 costo_total_sesion = 0.0
 
@@ -40,11 +40,16 @@ def consultar_modelo(pregunta, modelo=MODELO, system_instruction=None):
 
 # Ensayo: peticiones seguidas, sin pausa, para provocar un rate limit real
 if __name__ == "__main__":
-    for i in range(PETICIONES):
+    respuesta = consultar_modelo("¿Cuál es la capital de Chile?")
+    print(f"Respuesta: {respuesta}")
+    print(f"Costo total de la sesión: ${costo_total_sesion:.6f}")
+
+
+    """ for i in range(PETICIONES):
         try:
             respuesta = consultar_modelo(f"Pregunta de prueba número {i}")
             print(f"Respuesta {i}: {respuesta[:40]}...")
         except RuntimeError as error:
             print(f"Respuesta {i} falló definitivamente: {error}")
 
-    print(f"Costo total del ensayo: ${costo_total_sesion:.6f}")
+    print(f"Costo total del ensayo: ${costo_total_sesion:.6f}") """
