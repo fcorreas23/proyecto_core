@@ -32,6 +32,12 @@ def test_enviar_peticion_credencial_invalida():
         with pytest.raises(ValueError):
             enviar_peticion("http://url_falsa", {"data": "test"})
 
+def test_enviar_peticion_sin_permiso():
+    respuesta_falsa = Mock(status_code=403)
+    with patch("consumir_api.requests.post", return_value=respuesta_falsa):
+        with pytest.raises(ValueError):
+            enviar_peticion("http://url_falsa", {"data": "test"})
+
 def test_enviar_peticion_limite_de_uso():
     respuesta_falsa = Mock(status_code=429, headers={})
     with patch("consumir_api.requests.post", return_value=respuesta_falsa):
@@ -105,6 +111,13 @@ def test_consultar_modelo_convierte_error(peticion_armada):
     with patch("cliente.con_reintento", side_effect=TimeoutError("simulado")):
         with pytest.raises(RuntimeError):
             consultar_modelo("pregunta de prueba")
+
+def test_consultar_modelo_propaga_value_error(peticion_armada):
+    error_simulado = ValueError("simulado")
+    with patch("cliente.enviar_peticion", side_effect=error_simulado):
+        with pytest.raises(ValueError) as capturado:
+            consultar_modelo("pregunta de prueba")
+    assert capturado.value is error_simulado
 
 def test_consultar_modelo_devuelve_texto_y_acumula_costo(peticion_armada):
     with patch("cliente.enviar_peticion", return_value=RESPUESTA_FALSA):
