@@ -1,0 +1,212 @@
+[
+  {
+    "consulta": "¿Qué es Python?",
+    "respuesta": "Python es un lenguaje de programación de alto nivel, interpretado y de propósito general, conocido por su sintaxis clara y legible.",
+    "precision": 0.33,
+    "cobertura": 1.0,
+    "f1": 0.5
+  },
+  {
+    "consulta": "¿Cuándo se creó Python?",
+    "respuesta": "Python fue creado oficialmente en febrero de 1991 por Guido van Rossum.",
+    "precision": 0.42,
+    "cobertura": 1.0,
+    "f1": 0.59
+  },
+  {
+    "consulta": "¿Qué es una lista en Python?",
+    "respuesta": "Una lista en Python es una estructura de datos ordenada y mutable que permite almacenar una colección de elementos de cualquier tipo.",
+    "precision": 0.32,
+    "cobertura": 0.88,
+    "f1": 0.47
+  },
+  {
+    "consulta": "¿Qué es Linux?",
+    "respuesta": "Linux es un sistema operativo libre y de código abierto basado en Unix, ampliamente utilizado en servidores, computadoras y dispositivos móviles.",
+    "precision": 0.38,
+    "cobertura": 0.57,
+    "f1": 0.46
+  },
+  {
+    "consulta": "¿Cuándo se publicó Linux?",
+    "respuesta": "Linux se publicó oficialmente el 17 de septiembre de 1991 por Linus Torvalds.",
+    "precision": 0.38,
+    "cobertura": 0.56,
+    "f1": 0.45
+  },
+  {
+    "consulta": "¿Qué es el kernel de Linux?",
+    "respuesta": "El kernel de Linux es el núcleo del sistema operativo que actúa como puente fundamental entre el hardware del equipo y el software de las aplicaciones.",
+    "precision": 0.42,
+    "cobertura": 0.79,
+    "f1": 0.55
+  },
+  {
+    "consulta": "¿Qué es una distribución de Linux?",
+    "respuesta": "Una distribución de Linux es un sistema operativo completo basado en el núcleo Linux que combina este con software adicional, como herramientas de sistema, bibliotecas y aplicaciones de usuario.",
+    "precision": 0.31,
+    "cobertura": 0.69,
+    "f1": 0.43
+  },
+  {
+    "consulta": "¿Qué hace el comando ls en Linux?",
+    "respuesta": "El comando `ls` en Linux sirve para listar los archivos y directorios que se encuentran en el directorio actual.",
+    "precision": 0.37,
+    "cobertura": 0.88,
+    "f1": 0.52
+  },
+  {
+    "consulta": "¿Qué hace el comando cd en Linux?",
+    "respuesta": "El comando `cd` en Linux sirve para cambiar el directorio de trabajo actual en la terminal.",
+    "precision": 0.38,
+    "cobertura": 0.86,
+    "f1": 0.52
+  },
+  {
+    "consulta": "¿Qué hace el comando pwd en Linux?",
+    "respuesta": "El comando `pwd` en Linux muestra la ruta completa del directorio actual de trabajo en el que te encuentras.",
+    "precision": 0.47,
+    "cobertura": 1.0,
+    "f1": 0.64
+  },
+  {
+    "consulta": "¿Qué hace el comando grep en Linux?",
+    "respuesta": "El comando grep en Linux se utiliza para buscar patrones o cadenas de texto específicas dentro de archivos.",
+    "precision": 0.44,
+    "cobertura": 0.89,
+    "f1": 0.59
+  },
+  {
+    "consulta": "¿Qué hace el comando chmod en Linux?",
+    "respuesta": "El comando `chmod` en Linux se utiliza para cambiar los permisos de lectura, escritura y ejecución de archivos y directorios.",
+    "precision": 0.3,
+    "cobertura": 0.67,
+    "f1": 0.41
+  },
+  {
+    "consulta": "¿Qué hace el comando chown en Linux?",
+    "respuesta": "El comando `chown` en Linux se utiliza para cambiar el propietario y/o el grupo al que pertenecen los archivos o directorios.",
+    "precision": 0.24,
+    "cobertura": 0.56,
+    "f1": 0.33
+  },
+  {
+    "consulta": "¿Qué hace el comando sudo en Linux?",
+    "respuesta": "El comando `sudo` permite a un usuario ejecutar programas con los privilegios de seguridad de otro usuario, por defecto el administrador o superusuario (`root`).",
+    "precision": 0.46,
+    "cobertura": 0.79,
+    "f1": 0.58
+  },
+  {
+    "consulta": "¿Qué es el usuario root en Linux?",
+    "respuesta": "El usuario root es la cuenta de superusuario en Linux que posee privilegios ilimitados para realizar cualquier acción, modificación o administración en el sistema operativo.",
+    "precision": 0.2,
+    "cobertura": 0.5,
+    "f1": 0.29
+  },
+  {
+    "consulta": "¿Qué contiene el directorio /etc en Linux?",
+    "respuesta": "El directorio `/etc` contiene los archivos de configuración del sistema y de los programas instalados.",
+    "precision": 0.67,
+    "cobertura": 1.0,
+    "f1": 0.8
+  },
+  {
+    "consulta": "¿Qué contiene el directorio /home en Linux?",
+    "respuesta": "El directorio `/home` contiene las carpetas personales de los usuarios del sistema, donde cada uno almacena sus archivos y configuraciones individuales.",
+    "precision": 0.38,
+    "cobertura": 0.8,
+    "f1": 0.52
+  },
+  {
+    "consulta": "¿Qué es un proceso en Linux?",
+    "respuesta": "Un proceso en Linux es una instancia en ejecución de un programa que el sistema operativo administra mediante un identificador único (PID) y recursos asignados de memoria y tiempo de CPU.",
+    "precision": 0.23,
+    "cobertura": 1.0,
+    "f1": 0.37
+  },
+  {
+    "consulta": "¿Qué hace el comando ps en Linux?",
+    "respuesta": "El comando `ps` en Linux muestra una instantánea de los procesos que se están ejecutando actualmente en el sistema.",
+    "precision": 0.37,
+    "cobertura": 0.88,
+    "f1": 0.52
+  },
+  {
+    "consulta": "¿Qué hace el comando kill en Linux?",
+    "respuesta": "El comando `kill` en Linux se utiliza para enviar una señal a un proceso en ejecución, con el fin principal de terminarlo o cerrarlo de forma controlada o forzosa.",
+    "precision": 0.34,
+    "cobertura": 0.83,
+    "f1": 0.49
+  },
+  {
+    "consulta": "¿Qué es una tubería en la terminal de Linux?",
+    "respuesta": "Una tubería (representada por el símbolo `|`) en la terminal de Linux es un mecanismo que permite conectar la salida estándar de un comando directamente a la entrada estándar de otro.",
+    "precision": 0.37,
+    "cobertura": 0.85,
+    "f1": 0.51
+  },
+  {
+    "consulta": "¿Qué es la shell en Linux?",
+    "respuesta": "La shell en Linux es un intérprete de comandos que actúa como interfaz entre el usuario y el sistema operativo para ejecutar órdenes y gestionar tareas.",
+    "precision": 0.27,
+    "cobertura": 1.0,
+    "f1": 0.42
+  },
+  {
+    "consulta": "¿Qué es Bash?",
+    "respuesta": "Bash es un lenguaje de comandos y un intérprete de órdenes utilizado en sistemas operativos Unix y Linux para interactuar con el sistema mediante texto.",
+    "precision": 0.32,
+    "cobertura": 0.67,
+    "f1": 0.43
+  },
+  {
+    "consulta": "¿Qué es un enlace simbólico en Linux?",
+    "respuesta": "Un enlace simbólico en Linux es un archivo especial que actúa como un acceso directo, apuntando a la ruta de otro archivo o directorio del sistema.",
+    "precision": 0.46,
+    "cobertura": 0.92,
+    "f1": 0.62
+  },
+  {
+    "consulta": "¿Qué es systemd en Linux?",
+    "respuesta": "Systemd es un sistema de inicio y administrador de servicios para Linux que gestiona el arranque del sistema y los procesos en segundo plano.",
+    "precision": 0.38,
+    "cobertura": 0.9,
+    "f1": 0.53
+  },
+  {
+    "consulta": "¿Qué es cron en Linux?",
+    "respuesta": "Cron es un administrador de procesos en segundo plano que permite programar la ejecución automática de tareas y comandos en horarios específicos en sistemas Linux.",
+    "precision": 0.12,
+    "cobertura": 0.43,
+    "f1": 0.19
+  },
+  {
+    "consulta": "¿Qué es apt en Linux?",
+    "respuesta": "APT es una herramienta de gestión de paquetes en sistemas Linux basados en Debian que facilita la instalación, actualización y eliminación de software.",
+    "precision": 0.3,
+    "cobertura": 0.7,
+    "f1": 0.42
+  },
+  {
+    "consulta": "¿Qué es SSH?",
+    "respuesta": "SSH (Secure Shell) es un protocolo de red criptográfico que permite a los usuarios acceder, controlar y gestionar servidores de forma segura a través de una conexión remota no segura.",
+    "precision": 0.3,
+    "cobertura": 0.64,
+    "f1": 0.41
+  },
+  {
+    "consulta": "¿Qué hace el comando tar en Linux?",
+    "respuesta": "El comando `tar` en Linux se utiliza para empaquetar y desempaquetar archivos en un único archivo de almacenamiento, conocido comúnmente como tarball, a menudo combinándose con herramientas de compresión como gzip o bzip2.",
+    "precision": 0.15,
+    "cobertura": 0.56,
+    "f1": 0.24
+  },
+  {
+    "consulta": "¿Qué hace el comando df en Linux?",
+    "respuesta": "El comando `df` en Linux muestra el espacio disponible y utilizado en el sistema de archivos de las particiones montadas.",
+    "precision": 0.4,
+    "cobertura": 0.89,
+    "f1": 0.55
+  }
+]
