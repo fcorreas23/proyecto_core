@@ -108,10 +108,11 @@ def evaluar_casos(casos):
         })
     return resultados
 
-# Función que guarda cada respuesta junto a sus métricas para revisarlas más tarde
+# Función que guarda cada respuesta junto a sus métricas
 def guardar_resultados(resultados):
     with open(ARCHIVO_RESULTADOS, "w", encoding="utf-8") as archivo:
         json.dump(resultados, archivo, indent=2, ensure_ascii=False)
+
 
 # Función que resume todos los resultados en un promedio por métrica
 def resumir_metricas(resultados):
@@ -139,7 +140,7 @@ if __name__ == "__main__":
     resultados = evaluar_casos(casos)
     guardar_resultados(resultados)
 
-    #print(resumir_metricas(resultados))
+    print(resumir_metricas(resultados))
     for caso in obtener_peores_casos(resultados):
         print(caso["consulta"], caso["f1"])
     print(f"Resultados guardados en {ARCHIVO_RESULTADOS}")

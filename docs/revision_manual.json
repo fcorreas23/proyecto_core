@@ -1,0 +1,82 @@
+[
+  {
+    "consulta": "¿Qué es cron en Linux?",
+    "f1": 0.19,
+    "correccion_factual": "si",
+    "completitud": "parcialmente",
+    "contradiccion": "no",
+    "nota": "habla de horarios específicos, pero no dice que la ejecución sea periódica; 'programar' no coincide con 'programadas'"
+  },
+  {
+    "consulta": "¿Qué hace el comando tar en Linux?",
+    "f1": 0.24,
+    "correccion_factual": "si",
+    "completitud": "si",
+    "contradiccion": "no",
+    "nota": "'empaquetar en un único archivo' equivale a 'agrupa en uno solo'; la métrica no reconoce la paráfrasis"
+  },
+  {
+    "consulta": "¿Qué es el usuario root en Linux?",
+    "f1": 0.29,
+    "correccion_factual": "si",
+    "completitud": "si",
+    "contradiccion": "no",
+    "nota": "'superusuario' y 'privilegios ilimitados' equivalen a 'administrador con control total'; ninguno coincide como token"
+  },
+  {
+    "consulta": "¿Qué hace el comando chown en Linux?",
+    "f1": 0.33,
+    "correccion_factual": "si",
+    "completitud": "si",
+    "contradiccion": "no",
+    "nota": "correcta; agrega el grupo y los directorios, y ese detalle extra baja la precisión"
+  },
+  {
+    "consulta": "¿Qué es un proceso en Linux?",
+    "f1": 0.37,
+    "correccion_factual": "si",
+    "completitud": "si",
+    "contradiccion": "no",
+    "nota": "cobertura 1.0 con F1 bajo: 'PID' y 'memoria' son información correcta que la métrica castiga por no estar en la referencia"
+  },
+  {
+    "consulta": "¿Cuándo se creó Python?",
+    "f1": 0.59,
+    "correccion_factual": "parcialmente",
+    "completitud": "si",
+    "contradiccion": "no",
+    "nota": "el año coincide; 'febrero' no está en la referencia y corresponde a la primera publicación, no a la creación"
+  },
+  {
+    "consulta": "¿Qué hace el comando grep en Linux?",
+    "f1": 0.59,
+    "correccion_factual": "si",
+    "completitud": "si",
+    "contradiccion": "no",
+    "nota": "correcta y casi literal; F1 alto bien justificado"
+  },
+  {
+    "consulta": "¿Qué es un enlace simbólico en Linux?",
+    "f1": 0.62,
+    "correccion_factual": "si",
+    "completitud": "si",
+    "contradiccion": "no",
+    "nota": "correcta; 'acceso directo' agrega una analogía válida"
+  },
+  {
+    "consulta": "¿Qué hace el comando pwd en Linux?",
+    "f1": 0.64,
+    "correccion_factual": "si",
+    "completitud": "si",
+    "contradiccion": "no",
+    "nota": "correcta y casi literal; F1 alto bien justificado"
+  },
+  {
+    "consulta": "¿Qué contiene el directorio /etc en Linux?",
+    "f1": 0.8,
+    "correccion_factual": "si",
+    "completitud": "si",
+    "contradiccion": "no",
+    "nota": "correcta; agrega los programas instalados, lo que es cierto"
+  }
+]
