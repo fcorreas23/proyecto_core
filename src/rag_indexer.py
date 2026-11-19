@@ -1,3 +1,7 @@
+import shutil
+import time
+from pathlib import Path
+
 from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -6,6 +10,10 @@ from langchain_core.documents import Document
 
 
 load_dotenv()
+
+# Límite del plan gratuito: 100 embeddings por minuto.
+TAMANO_LOTE = 90
+ESPERA_ENTRE_LOTES = 61  # segundos
 
 def verificar_integridad(chunks, corpus):
     """
@@ -45,7 +53,30 @@ def verificar_integridad(chunks, corpus):
 
     print(f"Integridad OK | Chunks: {len(chunks)}")
 
-def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 30, es_documento=False):
+def cargar_documentos(rutas):
+    """Lee cada archivo y lo convierte en un Document con metadata "fuente".
+    Esa clave es la que después usa formatear_contexto para armar las citas."""
+    documentos = []
+    for ruta in rutas:
+        with open(ruta, "r", encoding="utf-8") as f:
+            documentos.append(Document(page_content=f.read(), metadata={"fuente": ruta}))
+    return documentos
+
+def generar_ids(chunks):
+    """IDs predecibles por chunk: <archivo_sin_extension>_<n>, donde n cuenta
+    los chunks DE ESE archivo (guia_0, guia_1, ..., limites_metrica_0, ...).
+    Se necesita uno por CHUNK, no por documento: un archivo largo se parte en
+    muchos chunks y cada uno necesita su propio id."""
+    contadores = {}
+    ids = []
+    for chunk in chunks:
+        base = Path(chunk.metadata.get("fuente", "chunk")).stem
+        n = contadores.get(base, 0)
+        ids.append(f"{base}_{n}")
+        contadores[base] = n + 1
+    return ids
+
+def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 30, es_documento=False, metadatas=None):
     #Dividir en fragmentos mas pequeños
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
@@ -53,24 +84,41 @@ def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 
     )
 
     if not es_documento:
-        chunks = splitter.create_documents(corpus)
+        # Lista de strings: la metadata se pasa aparte (una por texto).
+        chunks = splitter.create_documents(corpus, metadatas=metadatas)
     else:
+        # Lista de Document: split_documents copia la metadata de cada
+        # Document (su "fuente") a todos los chunks que salen de él.
         chunks = splitter.split_documents(corpus)
-        
 
     # Auditar antes de crear embeddings: si algo falla, se detiene aquí
     # sin gastar tokens.
     verificar_integridad(chunks, corpus)
 
+    ids = generar_ids(chunks)
+
     #Embedding
     embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
-    #Inicializando el vector store
-    vector_store = Chroma.from_documents(
-        documents=chunks,
-        embedding=embeddings,
-        persist_directory=persist_directory
+    #Inicializando el vector store (vacío) y agregando por lotes
+    vector_store = Chroma(
+        persist_directory=persist_directory,
+        embedding_function=embeddings
     )
+
+    # El plan gratuito de Gemini permite 100 embeddings por minuto. Con más
+    # chunks que eso, from_documents falla con 429 RESOURCE_EXHAUSTED.
+    # Por eso agregamos en lotes y esperamos un minuto entre lote y lote.
+    for inicio in range(0, len(chunks), TAMANO_LOTE):
+        if inicio > 0:
+            print(f"Esperando {ESPERA_ENTRE_LOTES}s por el límite de la API...")
+            time.sleep(ESPERA_ENTRE_LOTES)
+        fin = inicio + TAMANO_LOTE
+        # ids=: sin esto Chroma inventa UUIDs aleatorios. Con ids fijos,
+        # repetir un lote reemplaza los chunks en vez de duplicarlos.
+        vector_store.add_documents(documents=chunks[inicio:fin], ids=ids[inicio:fin])
+        print(f"Indexados {min(fin, len(chunks))}/{len(chunks)} chunks")
+
     return vector_store
 
 def cargar_vectorstore(persist_directory):
@@ -152,7 +200,7 @@ if __name__ == "__main__":
 
     persist_directory = "vectorstore/"
     #indexar_corpus(corpus, persist_directory)
-    vector_store = cargar_vectorstore(persist_directory)
+    #vector_store = cargar_vectorstore(persist_directory)
     #agregar_documento(vector_store, "Nuevo documento de prueba", "test")
 
     #datos = vector_store._collection.get()
@@ -167,15 +215,24 @@ if __name__ == "__main__":
     #resultados_retriever = retriever.invoke(pregunta)
     #print("Resultados del retriever:", resultados_retriever)
 
-    #Instalación adicional si queremos leer pdf, docs, etc
-    with open("Guia_Git_GitHub_3_Usuarios.md", "r", encoding="utf-8") as f: #r: read, a: append, w: write
-        contenido = f.read()
+    # Corpus propio: la guía de Git + la documentación del proyecto.
+    # Cada archivo queda como "fuente" en la metadata de sus chunks.
+    archivos_corpus = [
+        "Guia_Git_GitHub_3_Usuarios.md",
+        "docs/decision-arquitectura.md",
+        "docs/limites_autonomia_agente.md",
+        "docs/limites_metrica.md",
+        "docs/registro_rate_limit.md",
+    ]
 
-    documentos = [Document(page_content=contenido, metadata={"fuente": "Guia_Git_GitHub_3_Usuarios.md", "fecha": "2026-11-13"})]
+    # Partir de cero: Chroma.from_documents AGREGA, no reemplaza. Si quedara
+    # el índice viejo, tendríamos chunks duplicados y otros sin metadata ni ids.
+    shutil.rmtree(persist_directory, ignore_errors=True)
 
-    indexar_corpus(documentos, persist_directory, es_documento=True)
+    documentos = cargar_documentos(archivos_corpus)
+    vector_store = indexar_corpus(documentos, persist_directory, es_documento=True)
 
-    datos = vector_store._collection.get()
-    print("Datos en el vector store:", datos["ids"])
-    print("Cantidad de chunks en el vector store:", vector_store._collection.count())
-    print("Chunks: ", datos["documents"])
+    datos = vector_store._collection.get(limit=3, include=["metadatas"])
+    print(f"Reindexados {vector_store._collection.count()} chunks en {persist_directory}, ahora con metadata e ids")
+    print("Ejemplo de ids:", datos["ids"])
+    print("Ejemplo de metadata:", datos["metadatas"])
