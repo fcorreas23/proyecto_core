@@ -7,6 +7,35 @@ from langchain_core.documents import Document
 
 load_dotenv()
 
+def verificar_integridad(chunks, corpus):
+    """
+    Auditar localmente los chunks antes de gastar tokens en embeddings.
+    - Chunks vacíos      -> error (detiene la ejecución)
+    - Chunks duplicados  -> advertencia
+    - Chunks que no salen del corpus -> error
+    """
+    # 1. Chunks vacíos
+    # Guardamos el ÍNDICE de cada chunk que queda vacío tras quitar espacios/saltos,
+    vacios = [i for i, chunk in enumerate(chunks) if not chunk.page_content.strip()]
+    if vacios:
+        # raise detiene todo: no se llega a llamar a la API de embeddings.
+        raise ValueError(f"Se detectaron chunks vacíos en los índices: {vacios}")
+
+    # 2. Chunks duplicados
+    contenidos = [chunk.page_content for chunk in chunks]
+    if len(contenidos) != len(set(contenidos)):
+        cantidad = len(contenidos) - len(set(contenidos))
+        print(f"Advertencia: {cantidad} chunk(s) duplicado(s).")
+
+    # 3. Origen de cada chunk
+    huerfanos = [
+        i for i, chunk in enumerate(chunks)
+        if not any(chunk.page_content in texto for texto in corpus)
+    ]
+    if huerfanos:
+        raise ValueError(f"Chunks que no provienen del corpus en los índices: {huerfanos}")
+
+    print(f"Integridad OK | Chunks: {len(chunks)}")
 
 def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 30):
     #Dividir en fragmentos mas pequeños
@@ -15,6 +44,11 @@ def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 
         chunk_overlap=chunk_overlap
     )
     chunks = splitter.create_documents(corpus)
+
+    # Auditar antes de crear embeddings: si algo falla, se detiene aquí
+    # sin gastar tokens.
+    verificar_integridad(chunks, corpus)
+
     #Embedding
     embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
@@ -32,8 +66,6 @@ def cargar_vectorstore(persist_directory):
 
 def eliminar_vector_por_id(vector_store , vector_id):
     vector_store._collection.delete(ids=[vector_id])
-    # No hace falta .persist(): langchain_chroma guarda en disco automáticamente
-    # al usar persist_directory (y ese método ya no existe).
 
 def agregar_documento(vector_store, documento, prefijo_id, chunk_size = 200, chunk_overlap = 30):
 
@@ -47,6 +79,9 @@ def agregar_documento(vector_store, documento, prefijo_id, chunk_size = 200, chu
         chunk_overlap=chunk_overlap
     )
     chunks = splitter.create_documents(documento)
+
+    # Misma auditoría antes de agregar al vector store.
+    verificar_integridad(chunks, documento)
 
     # IDs reales para Chroma: "prefijo_0", "prefijo_1", ...
     # Antes se guardaban en chunk.metadata["id"], pero eso es solo un dato extra;
@@ -79,7 +114,7 @@ if __name__ == "__main__":
 ]
 
     persist_directory = "vectorstore/"
-    indexar_corpus(corpus, persist_directory)
+    #indexar_corpus(corpus, persist_directory)
     vector_store = cargar_vectorstore(persist_directory)
     agregar_documento(vector_store, "Nuevo documento de prueba", "test")
 
