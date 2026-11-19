@@ -28,22 +28,35 @@ def verificar_integridad(chunks, corpus):
         print(f"Advertencia: {cantidad} chunk(s) duplicado(s).")
 
     # 3. Origen de cada chunk
+    # El corpus puede venir como lista de strings o como lista de Document
+    # (cuando es_documento=True). Sacamos el texto plano de cada uno para
+    # poder buscar el chunk dentro; si no, "in" se compararía contra el
+    # objeto Document y nunca encontraría nada.
+    textos_corpus = [
+        texto.page_content if isinstance(texto, Document) else texto
+        for texto in corpus
+    ]
     huerfanos = [
         i for i, chunk in enumerate(chunks)
-        if not any(chunk.page_content in texto for texto in corpus)
+        if not any(chunk.page_content in texto for texto in textos_corpus)
     ]
     if huerfanos:
         raise ValueError(f"Chunks que no provienen del corpus en los índices: {huerfanos}")
 
     print(f"Integridad OK | Chunks: {len(chunks)}")
 
-def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 30):
+def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 30, es_documento=False):
     #Dividir en fragmentos mas pequeños
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
     )
-    chunks = splitter.create_documents(corpus)
+
+    if not es_documento:
+        chunks = splitter.create_documents(corpus)
+    else:
+        chunks = splitter.split_documents(corpus)
+        
 
     # Auditar antes de crear embeddings: si algo falla, se detiene aquí
     # sin gastar tokens.
@@ -98,6 +111,30 @@ def agregar_documento(vector_store, documento, prefijo_id, chunk_size = 200, chu
 
     return ids
 
+"""
+Realiza la búsqueda semántica (por significado, NO POR PALABRA EXACTA) en el vector store.
+Devuelve una lista con los resultados semejantes
+"""
+def busqueda_semantica(vector_store, query, top_k=2):
+    results = vector_store.similarity_search(query, k=top_k)
+
+    print(f"Resultados de la búsqueda semántica para la query '{query}':")
+    for i, result in enumerate(results):
+        print(f"{i+1}. {result.page_content}")
+    return results
+
+def formatear_resultados(resultados):
+    lineas = []
+    citas = {}
+
+    for i, doc in enumerate(resultados, start=1):
+        fuente = doc.metadata.get("fuente", "desconocida")
+        lineas.append(f"[{i}] {doc.page_content}")
+        citas[i] = fuente
+
+    contexto = "\n\n".join(lineas)
+    return contexto, citas
+
 
 if __name__ == "__main__":
     corpus = [
@@ -111,13 +148,34 @@ if __name__ == "__main__":
         "fabrica.",
         "El envio de una devolucion corre por cuenta del cliente, excepto cuando el "
         "producto llego danado.",
-]
+    ]
 
     persist_directory = "vectorstore/"
     #indexar_corpus(corpus, persist_directory)
     vector_store = cargar_vectorstore(persist_directory)
-    agregar_documento(vector_store, "Nuevo documento de prueba", "test")
+    #agregar_documento(vector_store, "Nuevo documento de prueba", "test")
+
+    #datos = vector_store._collection.get()
+    #print("Datos en el vector store:", datos["ids"])
+    #print("Cantidad de chunks en el vector store:", vector_store._collection.count())
+
+    #pregunta = "¿Cuánto tiempo tengo para cancelar un pedido?"
+    #busqueda_semantica(vector_store, pregunta)
+
+    #retriever = vector_store.as_retriever(search_kwargs={"k": 2})
+
+    #resultados_retriever = retriever.invoke(pregunta)
+    #print("Resultados del retriever:", resultados_retriever)
+
+    #Instalación adicional si queremos leer pdf, docs, etc
+    with open("Guia_Git_GitHub_3_Usuarios.md", "r", encoding="utf-8") as f: #r: read, a: append, w: write
+        contenido = f.read()
+
+    documentos = [Document(page_content=contenido, metadata={"fuente": "Guia_Git_GitHub_3_Usuarios.md", "fecha": "2026-11-13"})]
+
+    indexar_corpus(documentos, persist_directory, es_documento=True)
 
     datos = vector_store._collection.get()
     print("Datos en el vector store:", datos["ids"])
     print("Cantidad de chunks en el vector store:", vector_store._collection.count())
+    print("Chunks: ", datos["documents"])
