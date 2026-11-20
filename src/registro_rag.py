@@ -5,9 +5,36 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI #Modelo para instanciar gemini
 
-from rag_indexer import cargar_vectorstore, formatear_contexto 
+from rag_indexer import cargar_vectorstore, formatear_contexto
 
 load_dotenv()
+
+# Precios POR TOKEN (USD) de cada modelo.
+# Ej: 0.00000075 por token = 0.75 USD por millón de tokens.
+MODELOS = [
+    {
+        "nombre": "gemini-3.8-flash",
+        "precio_entrada": 0.00000075,
+        "precio_salida": 0.00000375
+    },
+    {
+        "nombre": "gemini-3.6-flash",
+        "precio_entrada": 0.00000075,
+        "precio_salida": 0.00000375
+    },
+    {
+        "nombre": "gemini-3.5-flash-lite",
+        "precio_entrada": 0.0000003,
+        "precio_salida": 0.0000025
+    },
+    {
+        "nombre": "gemini-3.1-flash-lite",
+        "precio_entrada": 0.00000025,
+        "precio_salida": 0.0000015
+    }
+]
+
+MODELO_POR_DEFECTO = "gemini-3.5-flash-lite"
 
 #Plantilla que me obligue a usar SOLO el contexto recuperado y también a citar [1], [2]
 PROMPT_TEMPLATE = """Responde la pregunta usando SOLO el contexto de abajo. Cita la \
@@ -46,27 +73,36 @@ def medir(tiempos: dict, etapa: str):
     #3.- DESPUÉS del bloque with: cuando el código termina, vuelvo aquí y detengo el tiempo
     tiempos[etapa] = time.perf_counter() - inicio #Tiempo total en el que se ejecutó esa etapa/tarea
 
-#Calculo de costos (tokens_entrada, tokens_salida, tarifa_entrada, tarifa_salida)
-def calcular_costo(tokens_entrada: int, tokens_salida: int, tarifa_entrada_x1M: float = .3, tarifa_salida_x1M: float = 2.5) -> float:
-    """
-    Calcula el costo monetario real de la consulta con contexto de mi RAG
-    """
-    costo_entrada = (tokens_entrada / 1000000) * tarifa_entrada_x1M
-    costo_salida = (tokens_salida / 1000000) * tarifa_salida_x1M
+def obtener_precios(nombre_modelo: str) -> tuple[float, float]:
+    """Busca en MODELOS el precio por token de entrada y de salida del modelo."""
+    for m in MODELOS:
+        if m["nombre"] == nombre_modelo:
+            return m["precio_entrada"], m["precio_salida"]
+    raise ValueError(f"El modelo '{nombre_modelo}' no está en la lista MODELOS")
 
-    return round(costo_entrada + costo_salida, 6)
+#Calculo de costos (tokens_entrada, tokens_salida, precio por token de entrada y salida)
+def calcular_costo(tokens_entrada: int, tokens_salida: int, precio_entrada: float, precio_salida: float) -> float:
+    """
+    Calcula el costo monetario real de la consulta con contexto de mi RAG.
+    Los precios son POR TOKEN (como en MODELOS), no por millón.
+    """
+    costo_entrada = tokens_entrada * precio_entrada
+    costo_salida = tokens_salida * precio_salida
+
+    return round(costo_entrada + costo_salida, 8)
 
 #Registrar consulta
-def registrar_consulta(vectorstore, pregunta: str, k: int = 3) -> dict:
+def registrar_consulta(vectorstore, pregunta: str, k: int = 3, modelo: str = MODELO_POR_DEFECTO) -> dict:
     """
     Ejecutar de punta a punta el proceso completo con RAG. (Recuperación + Prompt con contexto + Generación con Gemini),
     Medir la latencia de cada etapa y extraer los tokens consumidos (reales) y el costo de esto
     """
     tiempos = {} #Es donde voy a almacenar la latencia de cada etapa
 
-    chat_model = ChatGoogleGenerativeAI(model="gemini-3.5-flash-lite")
-    
-    #Etapa 1: Embed y la busqueda vectorial (Consulta a mi VS) - Acción Local
+    precio_entrada, precio_salida = obtener_precios(modelo) #falla antes de gastar tokens si el modelo no existe
+    chat_model = ChatGoogleGenerativeAI(model=modelo)
+
+    #Etapa 1: Embed de la pregunta (llamada a la API) + búsqueda vectorial en Chroma (local)
     with medir(tiempos, "embed_y_busqueda"):
         retriever = vectorstore.as_retriever(search_kwargs={"k": k})
         chunks = retriever.invoke(pregunta) #busqueda vectorial con Chroma
@@ -79,9 +115,9 @@ def registrar_consulta(vectorstore, pregunta: str, k: int = 3) -> dict:
     #Etapa 3: Generación de la respuesta con Gemini
     with medir(tiempos, "generacion"):
         respuesta = chat_model.invoke(prompt)
-    
-    #respuesta tiene usage_metadata -> tokens se gastaron. 
-    #respuesta["usage_metadata"]["input_tokens"], respuesta["usage_metadata"]["output_tokens"]
+
+    #respuesta tiene usage_metadata -> tokens se gastaron.
+    #respuesta.usage_metadata["input_tokens"], respuesta.usage_metadata["output_tokens"]
     tokens_reales = dict(respuesta.usage_metadata) if respuesta.usage_metadata else None
 
     costo_usd = None
@@ -90,67 +126,99 @@ def registrar_consulta(vectorstore, pregunta: str, k: int = 3) -> dict:
         costo_usd = calcular_costo(
             tokens_entrada = tokens_reales.get("input_tokens", 0),
             tokens_salida = tokens_reales.get("output_tokens", 0), #output_tokens YA INCLUYE tokens de razonamiento
-            tarifa_entrada_x1M = .3,
-            tarifa_salida_x1M = 2.5
+            precio_entrada = precio_entrada,
+            precio_salida = precio_salida
         )
-    
+
     #Factor crecimiento: comparación de cuánto creció el texto de entrada vs la pregunta solita
     factor_crecimiento = round(len(prompt) / len(pregunta), 1)
 
     #Construir el diccionario con toda la info que obtuvimos
     registro = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "modelo": modelo,
         "pregunta": pregunta,
         "k": k,
-        "respuesta_generada": respuesta.content,
+        # .text en vez de .content: en los modelos Gemini 3 .content puede venir
+        # como lista de bloques; .text siempre es el texto plano.
+        "respuesta_generada": respuesta.text,
         "citas_disponibles": citas,
+        "ids_recuperados": [c.id for c in chunks], #ids predecibles: Guia_Git_GitHub_3_Usuarios_N
         "tiempo_ms": {etapa: round(seg * 1000, 2) for etapa, seg in tiempos.items()},
         "tiempo_total_ms": round(sum(tiempos.values()) * 1000, 2),
         "factor_crecimiento": f"{factor_crecimiento}x",
         "tokens": tokens_reales,
-        "costo_estimado_usd": f"{costo_usd:.6f}"
+        # Si el modelo no devolvió usage_metadata, el costo queda en None
+        # (antes f"{None:.6f}" hacía fallar el script).
+        "costo_estimado_usd": None if costo_usd is None else f"{costo_usd:.8f}"
     }
 
     return registro
 
-def guardar_registro_jsonl(registro: dict, ruta_archivo: str = "registro_latencia_costo_rag.jsonl"):
+def guardar_registro_jsonl(registro: dict, ruta_archivo: str = "registros_latencia_costo.jsonl"):
     """
     Guarda cada corrida/registro generado y lo agrega a un json
     """
     with open(ruta_archivo, "a", encoding="utf-8") as f: #agrego al final del archivo
         f.write(json.dumps(registro, ensure_ascii=False)+"\n")
-    
+
     print(f"Registro guardado en {ruta_archivo}")
 
+def imprimir_resumen(registro: dict):
+    """Muestra lo más importante del registro en pocas líneas."""
+    tokens = registro["tokens"] or {}
+    print("=" * 80)
+    print(f"Modelo:    {registro['modelo']}")
+    print(f"Pregunta:  {registro['pregunta']}")
+    print(f"Chunks:    {registro['ids_recuperados']}")
+    print(f"Tiempos:   {registro['tiempo_ms']}  (total {registro['tiempo_total_ms']} ms)")
+    print(f"Tokens:    entrada={tokens.get('input_tokens')}  salida={tokens.get('output_tokens')}  total={tokens.get('total_tokens')}")
+    print(f"Costo:     {registro['costo_estimado_usd']} USD   |   Factor crecimiento: {registro['factor_crecimiento']}")
+    print(f"Respuesta: {registro['respuesta_generada']}")
+
 if __name__ == "__main__":
-    CARPETA_DB = "vectorstore_ejemplo"
+    # Ejecutar desde la raíz del proyecto:  python src/registro_rag.py
+    CARPETA_DB = "vectorstore/"
     K = 3
     vs = cargar_vectorstore(CARPETA_DB)
 
-    pregunta = "¿Cuántos intentos hace el cliente ante un TimeoutError y cuánto espera entre cada uno?"
+    if vs._collection.count() == 0:
+        raise SystemExit(f"'{CARPETA_DB}' está vacío. Corre primero: python src/rag_indexer.py")
 
+    # Preguntas sobre Guia_Git_GitHub_3_Usuarios.md.
+    # Cada una gasta 1 embedding + 1 llamada al modelo.
+    preguntas = [
+        "¿Cómo se resuelve un conflicto de merge?",
+        "¿Cómo deshago un commit que ya compartí con mi equipo?",
+    ]
+
+    for pregunta in preguntas:
+        registro = registrar_consulta(vs, pregunta, K, modelo=MODELO_POR_DEFECTO)
+        imprimir_resumen(registro)
+        guardar_registro_jsonl(registro)
+
+    # Comparar costo y latencia de la MISMA pregunta con todos los modelos.
+    # Descomenta para usarlo (gasta 1 embedding + 1 llamada por modelo):
+    # for m in MODELOS:
+    #     registro = registrar_consulta(vs, preguntas[0], K, modelo=m["nombre"])
+    #     imprimir_resumen(registro)
+    #     guardar_registro_jsonl(registro)
+
+    # Prueba sin llamar al modelo: cuánto crece el prompt con el contexto RAG.
     # tiempos = {}
     # with medir(tiempos, "embed_y_busqueda"):
     #     retriever = vs.as_retriever(search_kwargs={"k": K})
-    #     chunks = retriever.invoke(pregunta)
-
+    #     chunks = retriever.invoke(preguntas[0])
     # contexto, citas = formatear_contexto(chunks)
-    # prompt_con_rag = PROMPT_TEMPLATE.format(contexto=contexto, pregunta=pregunta) #Prompt con los chunks que recibimos de vs y la pregunta
-
-    # print(f"Pregunta sola. Caracteres: {len(pregunta)}. Tokens Aprox: {aprox_tokens(pregunta)}")
-    # print(f"Prompt con RAG. Caracteres: {len(prompt_con_rag)}. Tokens Aprox: {aprox_tokens(prompt_con_rag)}") #Ya incluye chunks
-    # print("Factor de crecimiento:", round(len(prompt_con_rag) / len(pregunta), 1), "x")
-
+    # prompt_con_rag = PROMPT_TEMPLATE.format(contexto=contexto, pregunta=preguntas[0])
+    # print(f"Pregunta sola. Caracteres: {len(preguntas[0])}. Tokens Aprox: {aprox_tokens(preguntas[0])}")
+    # print(f"Prompt con RAG. Caracteres: {len(prompt_con_rag)}. Tokens Aprox: {aprox_tokens(prompt_con_rag)}")
+    # print("Factor de crecimiento:", round(len(prompt_con_rag) / len(preguntas[0]), 1), "x")
     # print("Tiempos:", tiempos)
-
-    registro = registrar_consulta(vs, pregunta, K)
-    print(registro)
-
-    guardar_registro_jsonl(registro)
 
     """
     #Flujo normal:
-    #Etapa 1: Embed y la busqueda vectorial (Consulta a mi VS) - Acción Local
+    #Etapa 1: Embed y la busqueda vectorial (Consulta a mi VS)
     retriever = vectorstore.as_retriever(search_kwargs={"k": k})
     chunks = retriever.invoke(pregunta) #busqueda vectorial con Chroma
 
