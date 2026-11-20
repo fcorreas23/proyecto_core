@@ -1,0 +1,12 @@
+Fecha: 2026-11-19
+Configuracion: k=3, chunk_size=200, chunk_overlap=30
+
+P=0.67 | R=0.50 | F1=0.57 | ¿Cómo se resuelve un conflicto de merge?
+P=1.00 | R=0.75 | F1=0.86 | ¿Cómo deshago un commit que ya compartí con mi equipo?
+P=0.33 | R=0.25 | F1=0.29 | ¿Cómo guardo temporalmente mis cambios para cambiar de rama sin perderlos?
+P=0.67 | R=1.00 | F1=0.80 | ¿Qué diferencia hay entre git fetch y git pull?
+P=0.67 | R=1.00 | F1=0.80 | ¿Qué significan base y compare al abrir un Pull Request?
+P=0.67 | R=0.67 | F1=0.67 | ¿Cómo recupero un commit que perdí después de un reset?
+P=0.00 | R=n/a | F1=0.00 | ¿Cuánto cuesta una licencia de GitHub Enterprise?
+
+PROMEDIO | P=0.67 | R=0.69 | F1=0.66

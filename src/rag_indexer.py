@@ -14,6 +14,7 @@ load_dotenv()
 # Límite del plan gratuito: 100 embeddings por minuto.
 TAMANO_LOTE = 90
 ESPERA_ENTRE_LOTES = 61  # segundos
+MAX_REINTENTOS = 4       # intentos por lote si la API responde 429
 
 def verificar_integridad(chunks, corpus):
     """
@@ -114,9 +115,30 @@ def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 
             print(f"Esperando {ESPERA_ENTRE_LOTES}s por el límite de la API...")
             time.sleep(ESPERA_ENTRE_LOTES)
         fin = inicio + TAMANO_LOTE
-        # ids=: sin esto Chroma inventa UUIDs aleatorios. Con ids fijos,
-        # repetir un lote reemplaza los chunks en vez de duplicarlos.
-        vector_store.add_documents(documents=chunks[inicio:fin], ids=ids[inicio:fin])
+
+        # Reintentos: si la cuota del minuto ya estaba gastada (por ejemplo,
+        # porque corriste otro script justo antes), la API responde 429.
+        # En vez de caernos, esperamos y repetimos el MISMO lote.
+        for intento in range(1, MAX_REINTENTOS + 1):
+            try:
+                # ids=: sin esto Chroma inventa UUIDs aleatorios. Con ids fijos,
+                # repetir un lote reemplaza los chunks en vez de duplicarlos.
+                vector_store.add_documents(documents=chunks[inicio:fin], ids=ids[inicio:fin])
+                break
+            except Exception as error:
+                mensaje = str(error)
+                # La cuota DIARIA (1000 embeddings/día) no se recupera esperando
+                # un minuto: no tiene sentido reintentar, se corta aquí.
+                if "per day" in mensaje:
+                    raise RuntimeError(
+                        "Se agotó la cuota DIARIA de embeddings del plan gratuito "
+                        "(1000/día). Vuelve a intentarlo mañana o usa otra API key."
+                    ) from error
+                if "RESOURCE_EXHAUSTED" not in mensaje or intento == MAX_REINTENTOS:
+                    raise  # otro tipo de error, o se acabaron los reintentos
+                print(f"Cuota agotada (429). Reintento {intento}/{MAX_REINTENTOS - 1} en {ESPERA_ENTRE_LOTES}s...")
+                time.sleep(ESPERA_ENTRE_LOTES)
+
         print(f"Indexados {min(fin, len(chunks))}/{len(chunks)} chunks")
 
     return vector_store
@@ -171,7 +193,7 @@ def busqueda_semantica(vector_store, query, top_k=2):
         print(f"{i+1}. {result.page_content}")
     return results
 
-def formatear_resultados(resultados):
+def formatear_contexto(resultados):
     lineas = []
     citas = {}
 
@@ -183,56 +205,74 @@ def formatear_resultados(resultados):
     contexto = "\n\n".join(lineas)
     return contexto, citas
 
+def inspeccionar_chunks(vector_store):
+    # include debe pedir también "documents": si no, datos["documents"] es None
+    # y el zip de abajo falla.
+    datos = vector_store._collection.get(limit=3, include=["metadatas", "documents"])
+    total = vector_store._collection.count()
+    print("Inspección de chunks en el vector store (total:", total, "):")
+    for i, (id, texto, metadata) in enumerate(zip(datos["ids"], datos["documents"], datos["metadatas"]), start=1):
+        print(f"{i}. ID: {id}, Metadata: {metadata}")
+        resumen = texto[:75] + "..." if len(texto) > 75 else texto
+        print(f"   Texto: {resumen}")
+    
+
 
 if __name__ == "__main__":
-    corpus = [
-        "Los pedidos se pueden cancelar dentro de las primeras 24 horas despues de "
-        "realizados, sin costo adicional.",
-        "Las devoluciones se aceptan hasta 30 dias despues de la entrega, siempre que "
-        "el producto este sin usar.",
-        "El reembolso se procesa en un plazo de 5 a 10 dias habiles despues de recibir "
-        "el producto devuelto.",
-        "Los productos en oferta o liquidacion no tienen devolucion, salvo defecto de "
-        "fabrica.",
-        "El envio de una devolucion corre por cuenta del cliente, excepto cuando el "
-        "producto llego danado.",
-    ]
-
+    # Ejecutar desde la raíz del proyecto:  python src/rag_indexer.py
     persist_directory = "vectorstore/"
-    #indexar_corpus(corpus, persist_directory)
-    #vector_store = cargar_vectorstore(persist_directory)
-    #agregar_documento(vector_store, "Nuevo documento de prueba", "test")
 
-    #datos = vector_store._collection.get()
-    #print("Datos en el vector store:", datos["ids"])
-    #print("Cantidad de chunks en el vector store:", vector_store._collection.count())
-
-    #pregunta = "¿Cuánto tiempo tengo para cancelar un pedido?"
-    #busqueda_semantica(vector_store, pregunta)
-
-    #retriever = vector_store.as_retriever(search_kwargs={"k": 2})
-
-    #resultados_retriever = retriever.invoke(pregunta)
-    #print("Resultados del retriever:", resultados_retriever)
-
-    # Corpus propio: la guía de Git + la documentación del proyecto.
-    # Cada archivo queda como "fuente" en la metadata de sus chunks.
+    # Corpus: cada archivo queda como "fuente" en la metadata de sus chunks.
     archivos_corpus = [
         "Guia_Git_GitHub_3_Usuarios.md",
-        "docs/decision-arquitectura.md",
-        "docs/limites_autonomia_agente.md",
-        "docs/limites_metrica.md",
-        "docs/registro_rate_limit.md",
     ]
 
-    # Partir de cero: Chroma.from_documents AGREGA, no reemplaza. Si quedara
-    # el índice viejo, tendríamos chunks duplicados y otros sin metadata ni ids.
-    shutil.rmtree(persist_directory, ignore_errors=True)
+    # Con ids fijos, volver a indexar REEMPLAZA los chunks existentes en vez
+    # de duplicarlos. Descomenta esto solo si cambias el corpus o el
+    # chunk_size y quieres borrar chunks viejos que ya no existen.
+    # shutil.rmtree(persist_directory, ignore_errors=True)
 
     documentos = cargar_documentos(archivos_corpus)
     vector_store = indexar_corpus(documentos, persist_directory, es_documento=True)
 
-    datos = vector_store._collection.get(limit=3, include=["metadatas"])
-    print(f"Reindexados {vector_store._collection.count()} chunks en {persist_directory}, ahora con metadata e ids")
-    print("Ejemplo de ids:", datos["ids"])
-    print("Ejemplo de metadata:", datos["metadatas"])
+    inspeccionar_chunks(vector_store)
+
+    # -----------------------------------------------------------------------
+    # Pruebas anteriores.
+    # -----------------------------------------------------------------------
+
+    # Corpus de ejemplo (políticas de pedidos), sin archivo de origen:
+    # corpus = [
+    #     "Los pedidos se pueden cancelar dentro de las primeras 24 horas despues de "
+    #     "realizados, sin costo adicional.",
+    #     "Las devoluciones se aceptan hasta 30 dias despues de la entrega, siempre que "
+    #     "el producto este sin usar.",
+    #     "El reembolso se procesa en un plazo de 5 a 10 dias habiles despues de recibir "
+    #     "el producto devuelto.",
+    #     "Los productos en oferta o liquidacion no tienen devolucion, salvo defecto de "
+    #     "fabrica.",
+    #     "El envio de una devolucion corre por cuenta del cliente, excepto cuando el "
+    #     "producto llego danado.",
+    # ]
+    # indexar_corpus(corpus, persist_directory)
+
+    # Cargar un índice ya existente (sin gastar embeddings) y agregar un documento:
+    # vector_store = cargar_vectorstore(persist_directory)
+    # agregar_documento(vector_store, "Nuevo documento de prueba", "test")
+
+    # Ver ids y cantidad de chunks guardados:
+    # datos = vector_store._collection.get()
+    # print("Datos en el vector store:", datos["ids"])
+    # print("Cantidad de chunks en el vector store:", vector_store._collection.count())
+
+    # Búsqueda semántica y retriever:
+    # pregunta = "¿Cómo se resuelve un conflicto de merge?"
+    # busqueda_semantica(vector_store, pregunta)
+    # retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+    # resultados_retriever = retriever.invoke(pregunta)
+    # print("Resultados del retriever:", resultados_retriever)
+
+    # Contexto numerado y citas:
+    # contexto_ejemplo, citas_ejemplo = formatear_contexto(resultados_retriever)
+    # print("Contexto formateado de ejemplo:\n", contexto_ejemplo)
+    # print("Citas de ejemplo:", citas_ejemplo)
