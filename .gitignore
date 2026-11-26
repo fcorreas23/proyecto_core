@@ -6,6 +6,8 @@ env/
 # Variables de entorno
 .env
 
+credentials.json
+
 # Cachés y compilados de Python
 __pycache__/
 *.py[cod]
