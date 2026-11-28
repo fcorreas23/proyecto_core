@@ -55,14 +55,21 @@ y cálculos solo agregaría ruido y acostumbraría a quien aprueba a decir "sí"
 
   Resultado actual: `5 trazas_agente.jsonl` y `2`.
 
+- **Qué guarda la traza (desde el Gate 2):** por gobernanza (Bloque 31), `trazas_agente.jsonl`
+  ya no guarda el texto del usuario ni la respuesta del modelo: guarda su longitud y su huella
+  (`entrada_len`/`entrada_hash`, `respuesta_len`/`respuesta_hash`). Lo que se audita en forma
+  estructurada sigue completo: `herramienta`, `argumentos` (monto, pedido) y `observacion`. Los
+  patrones que comparan contra el texto del usuario (1, 2 y 4) se revisan en la conversación
+  original del canal de atención, buscándola por `session_id` y `timestamp`.
+
 - **Qué se busca (patrones del Bloque 23 aplicados a este agente):**
   1. **Reembolso sin pedido explícito:** `generar_reembolso` aparece en
-     `acciones` aunque la `entrada` del usuario no pidió un reembolso.
+     `acciones` aunque el usuario no pidió un reembolso (se contrasta con la conversación original).
   2. **Monto distinto al pedido:** el `monto` de `argumentos` no coincide con la
-     cifra que escribió el usuario, o está fuera de lo razonable.
+     cifra que escribió el usuario (conversación original), o está fuera de lo razonable.
   3. **Pedido inexistente:** reembolsos sobre números de pedido que no existen.
      Hoy la herramienta no lo detecta (ver limitaciones).
-  4. **Respuesta que contradice la observación:** la `respuesta_final` dice que el
+  4. **Respuesta que contradice la observación:** la respuesta final (conversación original) dice que el
      reembolso se hizo, pero la observación dice "no aprobado", o el precio o el
      estado informados no coinciden con lo que devolvió la herramienta.
   5. **Respuesta sin herramienta:** `acciones` vacío en una pregunta de costo o de

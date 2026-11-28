@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import queue
@@ -173,8 +174,15 @@ def normalizar_salida(resultado: dict) -> dict:
 
 
 # === Registro de trazabilidad ===
+def huella(texto: str) -> str:
+    return hashlib.sha256(texto.encode("utf-8")).hexdigest()[:12]
+
+
 def registrar_traza(session_id: str, entrada: str, resultado: dict) -> None:
-    """Guarda herramientas llamadas y respuesta final, una línea JSON por turno."""
+    """Guarda herramientas llamadas y respuesta final, una línea JSON por turno.
+    El texto del usuario y la respuesta del modelo no se guardan tal cual (Bloque 31): solo su
+    longitud y su huella. Herramienta, argumentos y observación sí, porque son los datos
+    estructurados que se auditan (monto, pedido, aprobado o no)."""
     acciones = []
     for accion, observacion in resultado.get("intermediate_steps", []):
         acciones.append(
@@ -188,9 +196,11 @@ def registrar_traza(session_id: str, entrada: str, resultado: dict) -> None:
     registro = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "session_id": session_id,
-        "entrada": entrada,
+        "entrada_len": len(entrada),
+        "entrada_hash": huella(entrada),
         "acciones": acciones,
-        "respuesta_final": resultado.get("output", ""),
+        "respuesta_len": len(resultado.get("output", "")),
+        "respuesta_hash": huella(resultado.get("output", "")),
     }
     with ARCHIVO_TRAZAS.open("a", encoding="utf-8") as archivo:
         archivo.write(json.dumps(registro, ensure_ascii=False, default=str) + "\n")
