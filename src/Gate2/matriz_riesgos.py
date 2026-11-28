@@ -27,14 +27,8 @@ def esta_en_el_limite(probabilidad, impacto):
     return False
 
 
+# Riesgos del servicio que se entrega en el Gate 2 (src/Gate2/servicio_rag.py)
 mis_riesgos = [
-    {"riesgo": "Agente de envios ejecuta generar_reembolso con un monto inducido por el usuario en la conversacion",
-     "probabilidad": 3,  # el usuario controla el texto y el modelo elige los argumentos de la herramienta
-     "impacto": 5,       # en un sistema real mueve dinero y un reembolso pagado no se revierte solo
-     "mitigacion": "Validacion Pydantic de argumentos + aprobacion previa con timeout de 15 s "
-                   "(Unidad 2.4: agente_con_memoria.py, docs/limites_autonomia_agente.md)",
-     "supervision": "Aprobacion humana obligatoria antes de cada reembolso; sin respuesta en 15 s se rechaza"},
-
     {"riesgo": "Inyeccion indirecta via un documento Markdown agregado al corpus e indexado en el vectorstore",
      "probabilidad": 3,  # hoy el corpus es una guia propia, pero se pueden sumar archivos externos
      "impacto": 4,       # podria revelar el prompt de sistema o desviar las respuestas a todos los usuarios
@@ -63,6 +57,13 @@ mis_riesgos = [
                    "recuperacion contra ids etiquetados (docs/resultados_evaluacion_rag.txt)",
      "supervision": "Revision manual de una muestra de respuestas con sus citas antes de cambiar k o chunk_size"},
 
+    {"riesgo": "Citas con formato inconsistente ([1, 3] en vez de [1]) rompen la extraccion de fuentes del servicio",
+     "probabilidad": 4,  # medido: 7 de 18 respuestas reales (docs/muestra_formato_respuestas.json)
+     "impacto": 2,       # el servicio cae al respaldo de listar todo el contexto como fuente; no se pierde la cita
+     "mitigacion": "fuentes_citadas() tolera listas dentro del corchete (servicio_rag.py) + plan de PEFT con "
+                   "dataset validado (Bloques 29-30: dataset_tuning.py, docs/decision_personalizacion.md)",
+     "supervision": None},
+
     {"riesgo": "Agotar la cuota gratuita de Gemini por reintentos o consultas repetidas",
      "probabilidad": 3,  # ya ocurrio un rate limit (docs/registro_rate_limit.md)
      "impacto": 2,       # el servicio se detiene unas horas; no hay costo ni perdida de datos
@@ -78,7 +79,18 @@ mis_riesgos = [
      "supervision": None},
 ]
 
-for r in mis_riesgos:
+# Componentes del Modulo 2 que NO forman parte del servicio del Gate 2: se documentan aparte,
+# con su propio punto de supervision, para no mezclarlos con la prioridad del servicio.
+riesgos_fuera_del_servicio = [
+    {"riesgo": "Agente de envios ejecuta generar_reembolso con un monto inducido por el usuario en la conversacion",
+     "probabilidad": 3,  # el usuario controla el texto y el modelo elige los argumentos de la herramienta
+     "impacto": 5,       # en un sistema real mueve dinero y un reembolso pagado no se revierte solo
+     "mitigacion": "Validacion Pydantic de argumentos + aprobacion previa con timeout de 15 s "
+                   "(Unidad 2.4: agente_con_memoria.py, docs/limites_autonomia_agente.md)",
+     "supervision": "Aprobacion humana obligatoria antes de cada reembolso; sin respuesta en 15 s se rechaza"},
+]
+
+for r in mis_riesgos + riesgos_fuera_del_servicio:
     r["puntaje"] = puntaje_riesgo(r["probabilidad"], r["impacto"])
     r["categoria"] = categoria_riesgo(r["puntaje"])
     r["al_limite"] = esta_en_el_limite(r["probabilidad"], r["impacto"])
@@ -99,6 +111,16 @@ if __name__ == "__main__":
     for r in sorted(mis_riesgos, key=lambda x: -x["puntaje"]):
         if r["categoria"] in ("ALTO", "CRITICO"):
             print(f"- {r['riesgo']}\n    -> {r['supervision']}")
+
+    maximo = max(r["puntaje"] for r in mis_riesgos)
+    print(f"\n=== Accion(es) de mayor riesgo del servicio (puntaje {maximo}) ===")
+    for r in mis_riesgos:
+        if r["puntaje"] == maximo:
+            print(f"- {r['riesgo']}\n    -> {r['supervision']}")
+
+    print("\n=== Fuera del servicio del Gate 2 (Unidad 2.4) ===")
+    for r in riesgos_fuera_del_servicio:
+        print(f"{r['categoria']:8} ({r['puntaje']:2}) - {r['riesgo']}\n    -> {r['supervision']}")
 
     # Reglas de la actividad
     assert len(mis_riesgos) >= 5, "la matriz necesita al menos cinco riesgos"
