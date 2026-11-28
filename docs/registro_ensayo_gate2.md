@@ -24,3 +24,4 @@
 - Supervisión: el grafo se pausa con `__interrupt__`; con `--aprobar` activa la versión `87b6ec1a4f9c` y sin decisión en una terminal no interactiva la rechaza.
 - `python -m pytest test/test_gate2.py -v`: 4 passed.
 - Corrida real (2026-11-28): índice regenerado con 147 chunks en 67 s, respuesta con `git revert HEAD` y su fuente, latencia total 2,3 s y costo estimado 0,0003 USD.
+- `evaluador_rag.py` re-ejecutado sobre el índice regenerado (2026-11-28): mismas métricas que el 2026-11-19 (P=0.67, R=0.69, F1=0.66), así que los ids etiquetados siguen siendo válidos.

@@ -1,4 +1,4 @@
-Fecha: 2026-11-19
+Fecha: 2026-11-28
 Configuracion: k=3, chunk_size=200, chunk_overlap=30
 
 P=0.67 | R=0.50 | F1=0.57 | ¿Cómo se resuelve un conflicto de merge?
