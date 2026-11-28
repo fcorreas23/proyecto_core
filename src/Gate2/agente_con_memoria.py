@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 # === Configuración ===
 load_dotenv()
 MODELO = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
-ARCHIVO_TRAZAS = Path("trazas_agente.jsonl")
+ARCHIVO_TRAZAS = Path(__file__).resolve().parents[2] / "docs" / "trazas_agente.jsonl"
 
 # === Datos de ejemplo (no es una base de datos persistente) ===
 ESTADOS = {

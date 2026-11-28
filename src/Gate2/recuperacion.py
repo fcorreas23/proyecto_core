@@ -6,7 +6,7 @@ Sobre el índice creado por rag_indexer.py (vectorstore/):
 2. Arma un prompt numerado que obliga al modelo a citar sus fuentes [N].
 3. Guarda un mapa número -> archivo (citas) para reconstruir la cita después.
 
-Ejecutar desde la raíz del proyecto:  python src/recuperacion.py
+Ejecutar desde la raíz del proyecto:  python src/Gate2/recuperacion.py
 """
 import re
 

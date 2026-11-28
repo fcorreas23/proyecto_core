@@ -1,3 +1,4 @@
+from pathlib import Path
 import time #Latencia
 import json #Registrar en jsonl la info
 from contextlib import contextmanager #administrador de contexto: ejecuta antes, durante y después de hacerse una acción
@@ -155,7 +156,7 @@ def registrar_consulta(vectorstore, pregunta: str, k: int = 3, modelo: str = MOD
 
     return registro
 
-def guardar_registro_jsonl(registro: dict, ruta_archivo: str = "registros_latencia_costo.jsonl"):
+def guardar_registro_jsonl(registro: dict, ruta_archivo=Path(__file__).resolve().parents[2] / "docs" / "registros_latencia_costo.jsonl"):
     """
     Guarda cada corrida/registro generado y lo agrega a un json
     """
@@ -177,13 +178,13 @@ def imprimir_resumen(registro: dict):
     print(f"Respuesta: {registro['respuesta_generada']}")
 
 if __name__ == "__main__":
-    # Ejecutar desde la raíz del proyecto:  python src/registro_rag.py
+    # Ejecutar desde la raíz del proyecto:  python src/Gate2/registro_rag.py
     CARPETA_DB = "vectorstore/"
     K = 3
     vs = cargar_vectorstore(CARPETA_DB)
 
     if vs._collection.count() == 0:
-        raise SystemExit(f"'{CARPETA_DB}' está vacío. Corre primero: python src/rag_indexer.py")
+        raise SystemExit(f"'{CARPETA_DB}' está vacío. Corre primero: python src/Gate2/rag_indexer.py")
 
     # Preguntas sobre Guia_Git_GitHub_3_Usuarios.md.
     # Cada una gasta 1 embedding + 1 llamada al modelo.

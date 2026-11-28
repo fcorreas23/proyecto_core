@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-RAIZ_PROYECTO = Path(__file__).resolve().parent.parent
+RAIZ_PROYECTO = Path(__file__).resolve().parents[2]
 ARCHIVO_RESULTADOS = RAIZ_PROYECTO / "docs" / "resultados_metricas.json"
 ARCHIVO_REVISION = RAIZ_PROYECTO / "docs" / "revision_manual.json"
 CASOS_POR_EXTREMO = 5

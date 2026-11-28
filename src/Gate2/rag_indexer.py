@@ -219,7 +219,7 @@ def inspeccionar_chunks(vector_store):
 
 
 if __name__ == "__main__":
-    # Ejecutar desde la raíz del proyecto:  python src/rag_indexer.py
+    # Ejecutar desde la raíz del proyecto:  python src/Gate2/rag_indexer.py
     persist_directory = "vectorstore/"
 
     # Corpus: cada archivo queda como "fuente" en la metadata de sus chunks.

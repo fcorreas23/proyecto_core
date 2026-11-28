@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 from datetime import date
 from rag_indexer import cargar_vectorstore
@@ -180,7 +181,7 @@ if __name__ == "__main__":
     # 1. El índice no puede estar vacío (pasa si la reindexación falló).
     total = vs._collection.count()
     if total == 0:
-        sys.exit(f"'{CARPETA_DB}' está vacío. Corre primero: python src/rag_indexer.py")
+        sys.exit(f"'{CARPETA_DB}' está vacío. Corre primero: python src/Gate2/rag_indexer.py")
 
     # 2. Los ids etiquetados deben existir en el índice. Si no, el índice se
     #    armó con otro corpus o con otro chunk_size y las métricas darían 0
@@ -205,7 +206,7 @@ if __name__ == "__main__":
     prom = promedios(resultados)
     print(f"\nPROMEDIO | P={prom['precision']:.2f} | R={prom['recall']:.2f} | F1={prom['f1']:.2f}")
 
-    guardar_reporte("resultados_evaluacion_rag.txt", resultados, K)
+    guardar_reporte(Path(__file__).resolve().parents[2] / "docs" / "resultados_evaluacion_rag.txt", resultados, K)
 
     """
     Precisión: Fórmula: Verdaderos Positivos / (Verdaderos Positivos + Falsos Positivos)

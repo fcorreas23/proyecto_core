@@ -58,7 +58,7 @@ Estos pasos se completan de forma progresiva a lo largo de la Unidad U1.2, no to
 5. Ejecuta la aplicación:
 
    ```bash
-   python src/consumir_api.py
+   python src/Gate1/consumir_api.py
    ```
 
 ## Estructura

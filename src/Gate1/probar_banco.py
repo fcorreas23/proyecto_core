@@ -4,8 +4,8 @@ import time
 from pathlib import Path
 from consumir_api import armar_peticion, enviar_peticion, extraer_texto, parsear_respuesta_json
 
-# Python solo busca módulos en src/; se agrega la raíz del proyecto para poder importar prompts/
-RAIZ_PROYECTO = Path(__file__).resolve().parent.parent
+# Python solo busca módulos en src/Gate1/; se agrega la raíz del proyecto para poder importar prompts/
+RAIZ_PROYECTO = Path(__file__).resolve().parents[2]
 sys.path.append(str(RAIZ_PROYECTO))
 from prompts.banco import BANCO_DE_PROMPTS
 

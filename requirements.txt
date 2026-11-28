@@ -31,6 +31,7 @@ urllib3==2.8.0
 websockets==16.1.1
 chromadb==1.5.9
 langchain==1.4.8
+langchain-classic==1.1.0
 langchain-chroma==1.1.0
 langchain-core==1.7.4
 langchain-google-genai==4.4.2

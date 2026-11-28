@@ -1,3 +1,4 @@
+from pathlib import Path
 import contextvars
 import hashlib
 import json
@@ -18,7 +19,7 @@ from rag_indexer import cargar_vectorstore, formatear_contexto
 load_dotenv()
 
 MODELO = "gemini-3.5-flash-lite"
-ARCHIVO_LOGS = "rag_logs.jsonl"
+ARCHIVO_LOGS = Path(__file__).resolve().parents[2] / "docs" / "rag_logs.jsonl"
 
 """
 Contextvars: crea una variable de contexto.
@@ -201,13 +202,13 @@ def ejecutar_consulta(vectorstore, pregunta: str, k: int = 3):
 
 
 if __name__ == "__main__":
-    # Ejecutar desde la raíz del proyecto:  python src/logs_reag.py
+    # Ejecutar desde la raíz del proyecto:  python src/Gate2/logging_rag.py
     CARPETA_DB = "vectorstore"
     K = 3
     vs = cargar_vectorstore(CARPETA_DB)
 
     if vs._collection.count() == 0:
-        raise SystemExit(f"'{CARPETA_DB}' está vacío. Corre primero: python src/rag_indexer.py")
+        raise SystemExit(f"'{CARPETA_DB}' está vacío. Corre primero: python src/Gate2/rag_indexer.py")
 
     # Preguntas sobre Guia_Git_GitHub_3_Usuarios.md.
     # Cada una gasta 1 embedding + 1 llamada al modelo.

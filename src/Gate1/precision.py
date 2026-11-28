@@ -5,7 +5,7 @@ from pathlib import Path
 from pipeline_limpieza import procesar_texto
 from cliente import consultar_modelo
 
-ARCHIVO_RESULTADOS = Path(__file__).resolve().parent.parent / "docs" / "resultados_metricas.json"
+ARCHIVO_RESULTADOS = Path(__file__).resolve().parents[2] / "docs" / "resultados_metricas.json"
 PAUSA = 6  # segundos entre peticiones para no superar la cuota del plan gratuito
 SYSTEM_INSTRUCTION = "Responde en una sola frase."
 
