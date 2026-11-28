@@ -19,3 +19,7 @@ __pycache__/
 .vscode/
 
 vectorstore/
+vectorstore_simulado/
+
+#Material de clase
+material_clase/
