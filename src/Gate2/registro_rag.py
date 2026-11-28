@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI #Modelo para instanciar gemini
 
+from log_rag import generar_huella
 from rag_indexer import cargar_vectorstore, formatear_contexto
 
 load_dotenv()
@@ -93,10 +94,12 @@ def calcular_costo(tokens_entrada: int, tokens_salida: int, precio_entrada: floa
     return round(costo_entrada + costo_salida, 8)
 
 #Registrar consulta
-def registrar_consulta(vectorstore, pregunta: str, k: int = 3, modelo: str = MODELO_POR_DEFECTO) -> dict:
+def registrar_consulta(vectorstore, pregunta: str, k: int = 3, modelo: str = MODELO_POR_DEFECTO) -> tuple[dict, str]:
     """
     Ejecutar de punta a punta el proceso completo con RAG. (Recuperación + Prompt con contexto + Generación con Gemini),
     Medir la latencia de cada etapa y extraer los tokens consumidos (reales) y el costo de esto
+    Devuelve (registro, respuesta): el registro NO guarda el texto de la pregunta ni de la
+    respuesta (solo longitud y huella, Bloque 31); el texto se devuelve aparte para mostrarlo.
     """
     tiempos = {} #Es donde voy a almacenar la latencia de cada etapa
 
@@ -138,11 +141,13 @@ def registrar_consulta(vectorstore, pregunta: str, k: int = 3, modelo: str = MOD
     registro = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "modelo": modelo,
-        "pregunta": pregunta,
+        "pregunta_len": len(pregunta),
+        "pregunta_hash": generar_huella(pregunta),
         "k": k,
         # .text en vez de .content: en los modelos Gemini 3 .content puede venir
         # como lista de bloques; .text siempre es el texto plano.
-        "respuesta_generada": respuesta.text,
+        "respuesta_len": len(respuesta.text),
+        "respuesta_hash": generar_huella(respuesta.text),
         "citas_disponibles": citas,
         "ids_recuperados": [c.id for c in chunks], #ids predecibles: Guia_Git_GitHub_3_Usuarios_N
         "tiempo_ms": {etapa: round(seg * 1000, 2) for etapa, seg in tiempos.items()},
@@ -154,7 +159,7 @@ def registrar_consulta(vectorstore, pregunta: str, k: int = 3, modelo: str = MOD
         "costo_estimado_usd": None if costo_usd is None else f"{costo_usd:.8f}"
     }
 
-    return registro
+    return registro, respuesta.text
 
 def guardar_registro_jsonl(registro: dict, ruta_archivo=Path(__file__).resolve().parents[2] / "docs" / "registros_latencia_costo.jsonl"):
     """
@@ -165,17 +170,17 @@ def guardar_registro_jsonl(registro: dict, ruta_archivo=Path(__file__).resolve()
 
     print(f"Registro guardado en {ruta_archivo}")
 
-def imprimir_resumen(registro: dict):
+def imprimir_resumen(registro: dict, pregunta: str, respuesta: str):
     """Muestra lo más importante del registro en pocas líneas."""
     tokens = registro["tokens"] or {}
     print("=" * 80)
     print(f"Modelo:    {registro['modelo']}")
-    print(f"Pregunta:  {registro['pregunta']}")
+    print(f"Pregunta:  {pregunta}")
     print(f"Chunks:    {registro['ids_recuperados']}")
     print(f"Tiempos:   {registro['tiempo_ms']}  (total {registro['tiempo_total_ms']} ms)")
     print(f"Tokens:    entrada={tokens.get('input_tokens')}  salida={tokens.get('output_tokens')}  total={tokens.get('total_tokens')}")
     print(f"Costo:     {registro['costo_estimado_usd']} USD   |   Factor crecimiento: {registro['factor_crecimiento']}")
-    print(f"Respuesta: {registro['respuesta_generada']}")
+    print(f"Respuesta: {respuesta}")
 
 if __name__ == "__main__":
     # Ejecutar desde la raíz del proyecto:  python src/Gate2/registro_rag.py
@@ -194,15 +199,15 @@ if __name__ == "__main__":
     ]
 
     for pregunta in preguntas:
-        registro = registrar_consulta(vs, pregunta, K, modelo=MODELO_POR_DEFECTO)
-        imprimir_resumen(registro)
+        registro, respuesta = registrar_consulta(vs, pregunta, K, modelo=MODELO_POR_DEFECTO)
+        imprimir_resumen(registro, pregunta, respuesta)
         guardar_registro_jsonl(registro)
 
     # Comparar costo y latencia de la MISMA pregunta con todos los modelos.
     # Descomenta para usarlo (gasta 1 embedding + 1 llamada por modelo):
     # for m in MODELOS:
-    #     registro = registrar_consulta(vs, preguntas[0], K, modelo=m["nombre"])
-    #     imprimir_resumen(registro)
+    #     registro, respuesta = registrar_consulta(vs, preguntas[0], K, modelo=m["nombre"])
+    #     imprimir_resumen(registro, preguntas[0], respuesta)
     #     guardar_registro_jsonl(registro)
 
     # Prueba sin llamar al modelo: cuánto crece el prompt con el contexto RAG.
