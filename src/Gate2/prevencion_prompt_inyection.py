@@ -8,8 +8,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from rag_indexer import cargar_vectorstore, formatear_contexto
-# Reutilizo la trazabilidad de logging_rag.py: mismo logger JSON, mismo trace_id y mismo handler.
-from logging_rag import MODELO, HandlerDeTrazabilidad, generar_huella, logger, trace_id_var
+# Reutilizo la trazabilidad de log_rag.py: mismo logger JSON, mismo trace_id y mismo handler.
+from log_rag import MODELO, HandlerDeTrazabilidad, generar_huella, logger, trace_id_var
 
 #Capa 1: Separación de Roles. (System vs Human)
 #Las reglas de seguridad van en el SystemMessage; el usuario y los documentos solo llegan en el HumanMessage

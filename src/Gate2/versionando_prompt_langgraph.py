@@ -2,7 +2,7 @@ from datetime import date
 import difflib
 import hashlib
 
-from logging_rag import generar_huella
+from log_rag import generar_huella
 
 from typing import TypedDict
 import uuid #Generar un identificador para mi proceso. Unique universal identifier
