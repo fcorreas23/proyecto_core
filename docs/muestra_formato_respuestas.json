@@ -1,0 +1,285 @@
+{
+  "fecha": "2026-11-28",
+  "k": 3,
+  "n_respuestas": 20,
+  "incumplimientos": 8,
+  "porcentaje": 40.0,
+  "problema_de_formato_o_tono": true,
+  "fallas_por_criterio": {
+    "C1_cita_presente": "1 de 18",
+    "C2_formato_cita": "7 de 18",
+    "C3_citas_validas": "0 de 18",
+    "C4_incluye_comando": "1 de 12",
+    "C5_declara_limite": "0 de 2"
+  },
+  "respuestas": [
+    {
+      "pregunta": "¿Cómo creo una rama nueva y me cambio a ella?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": false,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": false,
+      "respuesta_len": 263,
+      "respuesta_hash": "f60461430bd6"
+    },
+    {
+      "pregunta": "¿Cómo subo mis commits al repositorio remoto?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": false,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": false,
+      "respuesta_len": 106,
+      "respuesta_hash": "3a6a6609962e"
+    },
+    {
+      "pregunta": "¿Qué hago antes de empezar a trabajar cada día?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": false,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": false
+      },
+      "cumple": false,
+      "respuesta_len": 88,
+      "respuesta_hash": "9fe330a945f0"
+    },
+    {
+      "pregunta": "¿Cómo actualizo mi rama después de que se hizo un merge en main?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": true,
+      "respuesta_len": 385,
+      "respuesta_hash": "92948be91e01"
+    },
+    {
+      "pregunta": "¿Cómo se resuelve un conflicto de merge?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": false,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true
+      },
+      "cumple": true,
+      "respuesta_len": 290,
+      "respuesta_hash": "b6be87f8d057"
+    },
+    {
+      "pregunta": "¿Qué es un Pull Request y para qué sirve?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": false,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true
+      },
+      "cumple": true,
+      "respuesta_len": 124,
+      "respuesta_hash": "8825f5f35e0d"
+    },
+    {
+      "pregunta": "¿Cómo veo qué archivos modifiqué antes de hacer commit?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": false,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": false,
+      "respuesta_len": 482,
+      "respuesta_hash": "e97be57924a6"
+    },
+    {
+      "pregunta": "¿Cómo veo el historial de commits de forma resumida?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": false,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": false,
+      "respuesta_len": 106,
+      "respuesta_hash": "714398fdc4fb"
+    },
+    {
+      "pregunta": "¿Cómo descarto los cambios de un archivo que todavía no agregué con add?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": true,
+      "respuesta_len": 252,
+      "respuesta_hash": "546376dd3e15"
+    },
+    {
+      "pregunta": "¿Cómo guardo temporalmente mis cambios para cambiar de rama sin perderlos?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": false,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": false,
+      "respuesta_len": 281,
+      "respuesta_hash": "e758f9faffee"
+    },
+    {
+      "pregunta": "¿Cómo deshago un commit que ya compartí con mi equipo?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": false,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": false,
+      "respuesta_len": 341,
+      "respuesta_hash": "17bf53d7c2c3"
+    },
+    {
+      "pregunta": "¿Cuál es la diferencia entre git reset y git revert?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": false,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true
+      },
+      "cumple": true,
+      "respuesta_len": 528,
+      "respuesta_hash": "10fac45607b8"
+    },
+    {
+      "pregunta": "¿Cómo recupero un commit que perdí después de un reset?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": true,
+      "respuesta_len": 495,
+      "respuesta_hash": "21017ce29215"
+    },
+    {
+      "pregunta": "¿Cómo comparo mi rama con main antes de abrir un Pull Request?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": true,
+      "respuesta_len": 367,
+      "respuesta_hash": "176e5394ba81"
+    },
+    {
+      "pregunta": "¿Cuáles son los tres estados de un archivo en Git?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": false,
+      "criterios": {
+        "C1_cita_presente": false,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true
+      },
+      "cumple": false,
+      "respuesta_len": 94,
+      "respuesta_hash": "0be81d437c8d"
+    },
+    {
+      "pregunta": "¿Cómo debería escribir un buen mensaje de commit?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": false,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true
+      },
+      "cumple": true,
+      "respuesta_len": 224,
+      "respuesta_hash": "32663e3a567e"
+    },
+    {
+      "pregunta": "¿Qué reglas de colaboración se recomiendan para el equipo?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": false,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true
+      },
+      "cumple": true,
+      "respuesta_len": 457,
+      "respuesta_hash": "02313240bd8d"
+    },
+    {
+      "pregunta": "¿Cómo vuelvo a la rama en la que estaba antes?",
+      "cubierta_por_la_guia": true,
+      "requiere_comando": true,
+      "criterios": {
+        "C1_cita_presente": true,
+        "C2_formato_cita": true,
+        "C3_citas_validas": true,
+        "C4_incluye_comando": true
+      },
+      "cumple": true,
+      "respuesta_len": 96,
+      "respuesta_hash": "8a9966aa9cc4"
+    },
+    {
+      "pregunta": "¿Cuánto cuesta una licencia de GitHub Enterprise?",
+      "cubierta_por_la_guia": false,
+      "requiere_comando": false,
+      "criterios": {
+        "C5_declara_limite": true
+      },
+      "cumple": true,
+      "respuesta_len": 149,
+      "respuesta_hash": "bb387a689cd9"
+    },
+    {
+      "pregunta": "¿Cómo configuro un pipeline de GitHub Actions para desplegar en AWS?",
+      "cubierta_por_la_guia": false,
+      "requiere_comando": false,
+      "criterios": {
+        "C5_declara_limite": true
+      },
+      "cumple": true,
+      "respuesta_len": 156,
+      "respuesta_hash": "2d0d27473244"
+    }
+  ]
+}
