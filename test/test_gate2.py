@@ -3,7 +3,7 @@ Pruebas de los cuatro criterios no compensables del Gate 2, sobre el servicio re
 (src/Gate2/servicio_rag.py) en modo simulado: no llaman a la API ni gastan cuota.
 
 Ejecutar desde la raíz del proyecto:
-    python -m pytest test_gate2.py -v
+    python -m pytest test/test_gate2.py -v
 """
 import logging
 

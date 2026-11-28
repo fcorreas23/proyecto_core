@@ -28,7 +28,7 @@ mi_puntaje = {
     "seguridad_gobernanza": 90,
 }
 
-# Verificados con: python -m pytest test_gate2.py -v  (4 passed)
+# Verificados con: python -m pytest test/test_gate2.py -v  (4 passed)
 no_compensables = {
     "pipeline_corre_de_punta_a_punta": True,
     "respuestas_citan_fuente": True,

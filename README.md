@@ -82,11 +82,11 @@ responde con un mensaje claro.
 ## 5. Pruebas
 
 ```bash
-python -m pytest test_gate2.py -v    # los 4 criterios no compensables del Gate 2 (sin API)
-python -m pytest                     # pruebas unitarias del Gate 1 y del enrutamiento (carpeta test/)
+python -m pytest test/test_gate2.py -v    # los 4 criterios no compensables del Gate 2 (sin API)
+python -m pytest                          # todas las pruebas de la carpeta test/
 ```
 
-`test_gate2.py` verifica, sobre el servicio real en modo simulado: que el pipeline responde sin
+`test/test_gate2.py` verifica, sobre el servicio real en modo simulado: que el pipeline responde sin
 excepciones, que la respuesta cita su fuente, que un correo incluido en la pregunta no aparece en
 ningún log, y que el grafo de supervisión se pausa y retoma con la decisión (aprobación y rechazo).
 
@@ -94,7 +94,7 @@ ningún log, y que el grafo de supervisión se pausa y retoma con la decisión (
 
 | Dimensión | Código | Evidencia |
 |---|---|---|
-| Pipeline RAG funcional (25 %) | `src/Gate2/servicio_rag.py`, `rag_indexer.py` | `docs/registro_ensayo_gate2.md`, `test_gate2.py` |
+| Pipeline RAG funcional (25 %) | `src/Gate2/servicio_rag.py`, `rag_indexer.py` | `docs/registro_ensayo_gate2.md`, `test/test_gate2.py` |
 | Recuperación y citación (15 %) | `rag_indexer.py` (`formatear_contexto`), `evaluador_rag.py` | `docs/resultados_evaluacion_rag.txt` (P=0.67, R=0.69, F1=0.66) |
 | Costo y latencia (10 %) | `registro_rag.py`, evento `latencia_costo` del servicio | `docs/registros_latencia_costo.jsonl` (corridas reales) |
 | Personalización justificada (15 %) | `dataset_tuning.py`, `decision.py`, `muestra_formato.py` | `docs/decision_personalizacion.md`, `docs/muestra_formato_respuestas.json` |
@@ -109,7 +109,7 @@ Autoevaluación con el promedio ponderado: `python src/Gate2/rubrica_gate2.py`.
   Se ejecuta con `python src/Gate1/consumir_api.py`.
 - `src/Gate2/`: servicio RAG y sus piezas (indexación, recuperación, evaluación, logging, seguridad,
   versionado, supervisión, agentes de la Unidad 2.4).
-- `test/`: pruebas unitarias. `test_gate2.py` (en la raíz): pruebas de los criterios del Gate 2.
+- `test/`: pruebas automáticas. `test/test_gate2.py` verifica los criterios no compensables del Gate 2.
 - `docs/`: decisiones de arquitectura, resultados de evaluación, registros de latencia y costo, logs
   y el registro del ensayo.
 - `prompts/`: banco de prompts del Gate 1.

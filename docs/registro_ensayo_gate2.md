@@ -1,7 +1,7 @@
 # Registro del ensayo funcional del Gate 2
 
 **Fecha:** 2026-11-28
-**Comando:** `python src/Gate2/servicio_rag.py --simulado` y `python -m pytest test_gate2.py -v`
+**Comando:** `python src/Gate2/servicio_rag.py --simulado` y `python -m pytest test/test_gate2.py -v`
 **Alcance:** indexar → recuperar → filtrar inyección → generar → citar → registrar logs, consumo, latencia y costo → supervisión humana.
 
 ## Hallazgos y correcciones
@@ -22,5 +22,5 @@
 - Modo simulado: el servicio corre de punta a punta sin `Traceback`, la respuesta termina con `Fuentes: Guia_Git_GitHub_3_Usuarios.md`, todos los eventos de la consulta comparten un `trace_id` y ningún log contiene la pregunta ni la respuesta.
 - Reindexar el corpus mantiene 147 chunks (los ids fijos reemplazan, no duplican).
 - Supervisión: el grafo se pausa con `__interrupt__`; con `--aprobar` activa la versión `87b6ec1a4f9c` y sin decisión en una terminal no interactiva la rechaza.
-- `python -m pytest test_gate2.py -v`: 4 passed.
+- `python -m pytest test/test_gate2.py -v`: 4 passed.
 - Corrida real (2026-11-28): índice regenerado con 147 chunks en 67 s, respuesta con `git revert HEAD` y su fuente, latencia total 2,3 s y costo estimado 0,0003 USD.
