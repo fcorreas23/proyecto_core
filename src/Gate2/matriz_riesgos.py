@@ -1,13 +1,3 @@
-"""
-Bloque 32 - Paso 3: matriz de riesgos del proyecto (RAG de Git/GitHub + agentes del Módulo 2).
-
-Cada fila: riesgo concreto, probabilidad e impacto (1 a 5, con la información de hoy),
-mitigación que apunta a algo ya construido y, para ALTO/CRITICO, su punto de supervisión humana.
-
-Ejecutar desde la raíz del proyecto:  python src/Gate2/matriz_riesgos.py
-"""
-
-
 def puntaje_riesgo(probabilidad, impacto):
     return probabilidad * impacto
 

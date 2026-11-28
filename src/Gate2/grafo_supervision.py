@@ -1,8 +1,4 @@
 """
-Bloque 32 - Paso 2: punto de supervisión humana para desplegar una versión nueva del prompt.
-
-proponer -> supervisar (interrupt: espera aprobación humana) -> aplicar (activa o rechaza)
-
 La huella viene del Paso 1 (python src/Gate2/registro_prompts.py) y se escribe como texto,
 para que este paso sea independiente del anterior.
 

@@ -1,21 +1,3 @@
-"""
-Bloque 31 - Actividad práctica: instrumenta el flujo RAG con logging y registro de consumo.
-
-Une, alrededor de UNA consulta, las tres piezas trabajadas en clase:
-  1. Logging estructurado JSON con trace_id por consulta  -> reutiliza log_rag.py
-  2. Registro de consumo (tokens) de cada llamada al modelo -> registrar_consumo()
-  3. Filtro de inyección sobre el contexto recuperado      -> reutiliza prevencion_prompt_inyection.py
-
-Con solo leer los logs de una consulta (todos con el mismo trace_id) se puede reconstruir:
-cuántos documentos se recuperaron, cuántos se descartaron y por qué, y cuánto costó el modelo.
-
-Gobernanza: nunca se loguea el texto de la pregunta, de los documentos ni de la respuesta;
-solo longitudes, huellas (sha256 truncado) y nombres de archivo fuente.
-
-Ejecutar desde la raíz del proyecto:
-    python src/Gate2/logging_rag.py           # pruebas 1-4, sin llamar a la API
-    python src/Gate2/logging_rag.py --real    # además, prueba 5 contra el vectorstore y Gemini
-"""
 import logging
 import sys
 import uuid

@@ -1,14 +1,3 @@
-"""
-Bloque 32 - Paso 1: registro de versiones del prompt de sistema del RAG de Git/GitHub.
-
-Reutiliza RegistroDePrompts y diff_prompts de versionando_prompt_langgraph.py (lección del
-Bloque 32) con los dos prompts REALES que tuvo el proyecto:
-  v1 -> el de la cadena RAG original con trazabilidad (log_rag.py)
-  v2 -> el actual, con la instrucción anti-inyección del Bloque 31 (prevencion_prompt_inyection.py)
-
-Ejecutar desde la raíz del proyecto:  python src/Gate2/registro_prompts.py
-La huella que imprime "ultima" es la que se copia en grafo_supervision.py (Paso 2).
-"""
 from versionando_prompt_langgraph import RegistroDePrompts, diff_prompts
 from prevencion_prompt_inyection import PROMPT_SYSTEM
 
