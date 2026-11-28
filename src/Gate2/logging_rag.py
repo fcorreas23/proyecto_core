@@ -101,7 +101,7 @@ def procesar_consulta(pregunta: str, documentos_recuperados: list[Document], mod
                 "evento": "pregunta_bloqueada_por_inyeccion",
                 "n_patrones": len(patrones_pregunta),
             }})
-            return {"bloqueada": True, "limpios": [], "descartados": [], "respuesta": None, "citas": {}}
+            return {"bloqueada": True, "limpios": [], "descartados": [], "respuesta": None, "citas": {}, "consumo": None}
 
         # Inyección indirecta: algún chunk recuperado trae el ataque -> se descarta ese chunk
         limpios, descartados = filtrar_documentos_sospechosos(documentos_recuperados)
@@ -112,7 +112,7 @@ def procesar_consulta(pregunta: str, documentos_recuperados: list[Document], mod
         }})
 
         resultado = {"bloqueada": False, "limpios": limpios, "descartados": descartados,
-                     "respuesta": None, "citas": {}}
+                     "respuesta": None, "citas": {}, "consumo": None}
         if modelo is None or not limpios:
             if modelo is not None:
                 logger.warning("sin contexto confiable, no se llama al modelo", extra={"extra_data": {
@@ -122,14 +122,14 @@ def procesar_consulta(pregunta: str, documentos_recuperados: list[Document], mod
 
         mensajes, citas = construir_mensajes(pregunta, limpios)
         respuesta = modelo.invoke(mensajes, config=config)
-        registrar_consumo(respuesta)
+        consumo = registrar_consumo(respuesta)
         logger.info("respuesta generada", extra={"extra_data": {
             "evento": "respuesta_generada",
             "chars_respuesta": len(respuesta.text),
             "respuesta_hash": generar_huella(respuesta.text),
             "n_citas": len(citas),
         }})
-        resultado.update(respuesta=respuesta.text, citas=citas)
+        resultado.update(respuesta=respuesta.text, citas=citas, consumo=consumo)
         return resultado
     finally:
         trace_id_var.reset(token)

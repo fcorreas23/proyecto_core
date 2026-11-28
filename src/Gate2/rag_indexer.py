@@ -77,7 +77,7 @@ def generar_ids(chunks):
         contadores[base] = n + 1
     return ids
 
-def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 30, es_documento=False, metadatas=None):
+def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 30, es_documento=False, metadatas=None, embeddings=None):
     #Dividir en fragmentos mas pequeños
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
@@ -98,8 +98,10 @@ def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 
 
     ids = generar_ids(chunks)
 
-    #Embedding
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+    #Embedding (se puede inyectar uno simulado, p. ej. DeterministicFakeEmbedding, para probar sin API)
+    #El límite de 100 embeddings/minuto solo aplica a la API real: con uno inyectado no se espera.
+    espera = ESPERA_ENTRE_LOTES if embeddings is None else 0
+    embeddings = embeddings or GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
     #Inicializando el vector store (vacío) y agregando por lotes
     vector_store = Chroma(
@@ -111,9 +113,9 @@ def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 
     # chunks que eso, from_documents falla con 429 RESOURCE_EXHAUSTED.
     # Por eso agregamos en lotes y esperamos un minuto entre lote y lote.
     for inicio in range(0, len(chunks), TAMANO_LOTE):
-        if inicio > 0:
-            print(f"Esperando {ESPERA_ENTRE_LOTES}s por el límite de la API...")
-            time.sleep(ESPERA_ENTRE_LOTES)
+        if inicio > 0 and espera:
+            print(f"Esperando {espera}s por el límite de la API...")
+            time.sleep(espera)
         fin = inicio + TAMANO_LOTE
 
         # Reintentos: si la cuota del minuto ya estaba gastada (por ejemplo,
@@ -143,8 +145,8 @@ def indexar_corpus(corpus, persist_directory, chunk_size = 200, chunk_overlap = 
 
     return vector_store
 
-def cargar_vectorstore(persist_directory):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+def cargar_vectorstore(persist_directory, embeddings=None):
+    embeddings = embeddings or GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
     return Chroma(persist_directory=persist_directory, embedding_function=embeddings)
 
 def eliminar_vector_por_id(vector_store , vector_id):
